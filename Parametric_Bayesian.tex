@@ -1,0 +1,460 @@
+\documentclass[11pt, a4paper]{article}
+
+% --- UNIVERSAL PREAMBLE BLOCK ---
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}
+\usepackage{fontspec}
+
+\usepackage[english, bidi=basic, provide=*]{babel}
+
+\babelprovide[import, onchar=ids fonts]{english}
+
+% Set default/Latin font to Sans Serif in the main (rm) slot
+\babelfont{rm}{Noto Sans}
+% ---------------------------------
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\setlist[itemize]{label=-}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    citecolor=blue,
+}
+
+\title{\textbf{Bayesian Parametric Modeling of Semicontinuous and Zero-Inflated Continuous Data: A Comprehensive Literature Review}}
+\author{\textbf{Literature Review}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Semicontinuous data, characterized by a prominent discrete mass at zero and a continuous, highly right-skewed distribution on the positive real line, present distinct challenges for statistical inference. This review examines the mathematical formulation of Bayesian parametric frameworks designed specifically for semicontinuous outcomes, including two-part (hurdle) models and compound Poisson-gamma (Tweedie) models. We evaluate prior sensitivity, detail advanced Markov Chain Monte Carlo (MCMC) estimation techniques, discuss marginalized formulations, and explore diagnostics and model selection under the Bayesian paradigm.
+\end{abstract}
+
+\section{Conceptual Foundations and the Semicontinuous Challenge}
+
+Semicontinuous data structures arise frequently in applied fields where an outcome is bounded from below by zero, contains a substantial proportion of exact zeros, and exhibits a highly skewed positive distribution \cite{ref1, ref2, ref3}. Unlike standard zero-inflated count data, which are traditionally analyzed using Zero-Inflated Poisson (ZIP) or Zero-Inflated Negative Binomial (ZINB) models, zero-inflated continuous data cannot be modeled using standard continuous probability density functions because the probability of observing exactly zero is non-zero \cite{ref2, ref4}. Forcing classical linear regression or simple log-transformations like $\log(y + 1)$ onto such data violates basic distributional assumptions, introduces severe re-transformation bias, underpredicts the spike at zero, and fails to distinguish between the probability of an event occurring and its conditional magnitude \cite{ref5, ref6}.
+
+To address these limitations, statisticians have developed robust Bayesian parametric frameworks designed specifically for semicontinuous outcomes \cite{ref1, ref4, ref7}. These frameworks fall into two primary paradigms: two-part (or hurdle) models, which decompose the data-generating process into a binary indicator and a conditional positive continuous density \cite{ref1, ref4, ref8}, and compound Poisson-gamma (Tweedie) models, which represent the outcome as a sum of a random number of continuous increments \cite{ref9, ref10, ref11}.
+
+While zero-inflated count models (such as ZIP and ZINB) are widely utilized in transcriptomics, microbiome studies, and ecological abundance modeling \cite{ref12, ref13}, they are inappropriate for continuous scales where outcomes represent physical quantities, durations, or financial values \cite{ref2, ref3, ref4}. Conversely, while causal discovery frameworks like Zero-Inflated Continuous Optimization (ZICO) or ZiGDAG optimize structural equation models for zero-inflated count data \cite{ref12, ref13}, semicontinuous parametric models must explicitly resolve the continuous nature of the positive outcomes \cite{ref1, ref2, ref4}.
+
+In clinical, economic, and environmental studies, attempting to force standard regression models onto semicontinuous data leads to severe structural misspecifications \cite{ref5, ref6}. Table~\ref{tab:regression_comparison} contrasts standard regression techniques with the two-part modeling framework to highlight the mathematical and practical limitations of traditional approaches.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Comparison of traditional regression techniques and two-part models.}
+\label{tab:regression_comparison}
+\begin{tabularx}{\textwidth}{l p{3.2cm} p{3.2cm} X}
+\toprule
+\textbf{Modeling Approach} & \textbf{Mathematical Treatment of Zeros} & \textbf{Prediction Boundary Behavior} & \textbf{Interpretability of Covariate Effects} \\
+\midrule
+\textbf{Ordinary Least Squares (OLS)} \cite{ref4, ref5} & Treated as ordinary continuous values on the real line. & Often predicts nonsensical negative values; highly pulled by the zero spike \cite{ref5}. & Conflates the probability of participating with the conditional magnitude of the outcome \cite{ref5}. \\
+\addlinespace
+\textbf{Log-Transformation} $\log(y + \epsilon)$ \cite{ref5} & Mapped to $\log(\epsilon)$, making results highly sensitive to arbitrary choices of $\epsilon$ \cite{ref5}. & Biased back-transformations; distorts the true data-generating process \cite{ref5, ref6}. & Parameter estimates represent elasticities on an artificial, shifted scale \cite{ref5, ref14}. \\
+\addlinespace
+\textbf{Tobit / Censored Regression} \cite{ref2} & Assumes zeros represent unobserved negative latent values (censoring) \cite{ref2}. & Bounded at zero but assumes the same process governs both censoring and magnitude \cite{ref2}. & Limits the ability to specify different covariate sets for participation and intensity \cite{ref2}. \\
+\addlinespace
+\textbf{Two-Part / Hurdle Models} \cite{ref1, ref2, ref4} & Explicitly modeled as a discrete probability mass (hurdle) \cite{ref1, ref4}. & Confined strictly to non-negative support; positive part modeled on its natural domain \cite{ref1, ref4, ref15}. & Decomposes effects into distinct participation (Part I) and intensity (Part II) components \cite{ref5, ref7, ref8}. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Semicontinuous patterns are prevalent across several scientific and economic domains, including:
+\begin{itemize}
+    \item \textbf{Health Economics and Insurance:} Medical expenditures, pharmacy costs, and insurance claim losses, where many individuals accrue zero costs, while a subpopulation of users exhibits highly right-skewed, heavy-tailed positive expenditures \cite{ref1, ref6, ref9}.
+    \item \textbf{Meteorology and Climatology:} Precipitation amounts, where zero represents days with no rainfall, and positive values denote the continuous intensity of rain events \cite{ref2, ref9}.
+    \item \textbf{Substance Use Research:} Alcohol consumption metrics (e.g., mean drinks per day), where non-drinkers generate a spike at zero and drinkers exhibit a skewed continuous distribution \cite{ref2, ref7, ref16}.
+    \item \textbf{Astrophysics:} Globular cluster system masses as a function of galaxy stellar mass, where some galaxies possess no clusters (zero mass) and others exhibit varying positive masses \cite{ref4}.
+\end{itemize}
+
+\section{Mathematical Formulations of Semicontinuous Models}
+
+\subsection{Two-Part Hurdle Model Formulations}
+The two-part (or hurdle) model treats the semicontinuous outcome $y_i$ ($i = 1, \dots, n$) as the realization of two separate stochastic processes \cite{ref2, ref7, ref8}. The first process governs the probability of crossing the hurdle (i.e., whether the outcome is zero or positive), while the second process models the continuous magnitude of the outcome conditional on crossing the hurdle \cite{ref4, ref5, ref8}. The probability density function of a two-part model is expressed as:
+
+\begin{equation}
+f(y_i) = (1 - \pi_i)\mathbb{I}(y_i = 0) + \pi_i f_+(y_i \mid y_i > 0; \theta)\mathbb{I}(y_i > 0)
+\end{equation}
+
+where $\pi_i = \mathbb{P}(y_i > 0)$ is the probability of a positive response, $\mathbb{I}(\cdot)$ is the indicator function, and $f_+(\cdot)$ is a parametric probability density function defined strictly on the positive real line $\mathbb{R}^+$ with parameters $\theta$ \cite{ref1, ref2, ref8}. 
+
+In a regression setting, both the binary and continuous stages are linked to covariates through appropriate link functions \cite{ref4, ref8}:
+
+\begin{equation}
+g(\pi_i) = x_{1i}' \alpha + z_{1i}' b_{1i}
+\end{equation}
+
+\begin{equation}
+\eta_i = h(\mathbb{E}[y_i \mid y_i > 0]) = x_{2i}' \beta + z_{2i}' b_{2i}
+\end{equation}
+
+where $g(\cdot)$ is typically a logistic or probit link function \cite{ref1, ref6}, $h(\cdot)$ is a link function for the positive component (frequently the log or identity link) \cite{ref6, ref8, ref17}, $x_{1i}$ and $x_{2i}$ are vectors of fixed-effect covariates \cite{ref1}, $z_{1i}$ and $z_{2i}$ are random-effect design vectors \cite{ref1, ref6}, and $b_{1i}$ and $b_{2i}$ are random effects capturing clustering, longitudinal correlation, or spatial structure \cite{ref1, ref15}.
+
+To capture different shapes of right-skewed positive continuous distributions, several parametric families are commonly employed for $f_+(y_i \mid y_i > 0; \theta)$ \cite{ref3, ref4, ref6}. Table~\ref{tab:distributions} summarizes these distributions, detailing their mathematical density formulations, supports, and primary domains of application.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Parametric continuous distributions for positive component $f_+(y_i \mid y_i > 0; \theta)$.}
+\label{tab:distributions}
+\begin{tabularx}{\textwidth}{l X p{3.8cm} X}
+\toprule
+\textbf{Distribution Family} & \textbf{Mathematical Density Formulation} & \textbf{Parameterization} & \textbf{Primary Areas of Application} \\
+\midrule
+\textbf{Lognormal} \cite{ref4, ref15, ref18} & $\frac{1}{y_i \sigma \sqrt{2\pi}} \exp\left( -\frac{(\log(y_i) - \mu_i)^2}{2\sigma^2} \right)$ \cite{ref18} & $\mu_i$: Mean on the log scale \cite{ref1, ref15} \newline $\sigma^2$: Variance on the log scale \cite{ref15, ref18} & Cost-effectiveness trials \cite{ref19, ref20}; household savings analysis. \cite{ref8} \\
+\addlinespace
+\textbf{Gamma} \cite{ref4, ref17, ref18} & $\frac{(\alpha / \mu_i)^\alpha}{\Gamma(\alpha)} y_i^{\alpha-1} \exp\left( -\frac{\alpha y_i}{\mu_i} \right)$ \cite{ref18} & $\mu_i$: Conditional mean \cite{ref17, ref18} \newline $\alpha$: Positive shape parameter \cite{ref18, ref21} & Ecological abundance surveys \cite{ref4, ref22}; daily rainfall totals. \cite{ref2} \\
+\addlinespace
+\textbf{Generalized Gamma} \cite{ref3, ref6} & $\frac{|\kappa|}{\Gamma(\kappa^{-2}) y_i \sigma} \left( \kappa^{-2} e^{\kappa w_i} \right)^{\kappa^{-2}} \exp\left( -\kappa^{-2} e^{\kappa w_i} \right)$ \newline where $w_i = \frac{\log(y_i) - \mu_i}{\sigma}$ \cite{ref6} & $\mu_i$: Location parameter \newline $\sigma$: Scale parameter \newline $\kappa$: Shape parameter \cite{ref6} & Comprehensive health service expenditure profiles. \cite{ref3, ref6, ref23} \\
+\addlinespace
+\textbf{Beta-Prime} \cite{ref7} & $\frac{y_i^{a-1} (1 + y_i)^{-a-b}}{B(a, b)}$ \newline where $B(a, b)$ is the beta function \cite{ref7} & $a, b$: Shape parameters governing heavy tails and skewness \cite{ref7} & Multi-level pharmaceutical expenditures. \cite{ref7} \\
+\addlinespace
+\textbf{Lomax} \cite{ref24} & $\frac{\alpha \lambda^\alpha}{(y_i + \lambda)^{\alpha+1}}$ \cite{ref24} & $\lambda$: Scale parameter \newline $\alpha$: Shape parameter \cite{ref24} & Metagenomics (MTX) data with extreme sparsity. \cite{ref24} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{The Tweedie Compound Poisson-Gamma Model}
+The Tweedie compound Poisson-gamma (CPG) model belongs to the exponential dispersion family and offers a single-stage framework that naturally handles a discrete probability mass at zero alongside continuous, positive skewed values \cite{ref9, ref11, ref25}. The model represents the random variable $Y$ as a sum of $N$ independent and identically distributed continuous random increments \cite{ref9, ref10, ref26}:
+
+\begin{equation}
+Y = \sum_{j=1}^{N} Z_j, \quad N \sim \text{Poisson}(\lambda), \quad Z_j \overset{iid}{\sim} \text{Gamma}(\alpha, \gamma)
+\end{equation}
+
+where the counting variable $N$ and the continuous increments $Z_j$ are independent \cite{ref26}. If $N = 0$, the sum collapses to $Y = 0$, which generates the discrete spike at zero \cite{ref9, ref26}. If $N > 0$, $Y$ is the sum of gamma random variables, resulting in a continuous, right-skewed positive distribution \cite{ref9, ref26}.
+
+The Tweedie distribution is characterized by a mean $\mu = \mathbb{E}[Y]$, a dispersion parameter $\phi$, and an index (or power) parameter $p \in (1, 2)$ \cite{ref9, ref11, ref26}. This index parameter links the mean and variance of the distribution through a power-variance relationship \cite{ref9, ref11, ref26}:
+
+\begin{equation}
+\text{Var}(Y) = \phi \mu^p
+\end{equation}
+
+The relationships between the classical Tweedie parameters $(\mu, \phi, p)$ and the Poisson-gamma parameters $(\lambda, \alpha, \gamma)$ are established analytically \cite{ref26}:
+
+\begin{equation}
+\lambda = \frac{\mu^{2-p}}{\phi(2-p)}, \quad \alpha = \frac{2-p}{p-1}, \quad \gamma = \phi(p-1)\mu^{p-1}
+\end{equation}
+
+This equivalence permits a dual interpretation: the model can be viewed either as a continuous exponential dispersion GLM or as a physical Poisson-gamma process, which is highly valuable in applications such as insurance pricing (where $N$ represents claim frequency and $Z_j$ represents individual claim severity) \cite{ref9, ref25, ref27} and meteorology (where $N$ represents rainfall events and $Z_j$ represents the intensity of each event) \cite{ref9}.
+
+To capture non-linear relationships in longitudinal semicontinuous outcomes, the Tweedie compound Poisson model is often extended to a partial linear mixed-effects framework \cite{ref26}. Nonparametric functions within the mean structure are approximated using Bayesian P-splines \cite{ref26}:
+
+\begin{equation}
+\log(\mu_{it}) = x_{it}' \beta + f(z_{it}) + w_{it}' b_i
+\end{equation}
+
+where $f(z_{it})$ is a smooth function modeled via a linear combination of B-splines, $f(z_{it}) = \sum_{k=1}^K \theta_k B_k(z_{it})$, with a first- or second-order random walk prior placed on the spline coefficients $\theta_k$ to control smoothness \cite{ref26, ref28}.
+
+\section{Hierarchical Extensions, Latent Classes, and Joint Outcomes}
+
+\subsection{Correlated Random Effects and Growth Mixture Models}
+In longitudinal or clustered studies, observations within the same subject or physician group are correlated \cite{ref1, ref6}. To account for this, two-part mixed models incorporate random effects in both stages \cite{ref1, ref6}. Rather than assuming independence between the decision to participate (Part I) and the intensity of use (Part II), these processes are linked by imposing a joint multivariate normal distribution on the random effects \cite{ref1, ref6}:
+
+\begin{equation}
+b_i = \begin{pmatrix} b_{1i} \\ b_{2i} \end{pmatrix} \sim \mathcal{N}\left( \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \Sigma = \begin{pmatrix} \Sigma_{11} & \Sigma_{12} \\ \Sigma_{21} & \Sigma_{22} \end{pmatrix} \right)
+\end{equation}
+
+where $b_{1i}$ represents the random effects for the binary part, $b_{2i}$ represents the random effects for the continuous positive part, and $\Sigma_{12}$ captures the cross-part covariance \cite{ref1, ref6, ref7}. For instance, a positive correlation indicates that subjects with a higher propensity to cross the hurdle also tend to accumulate larger positive magnitudes \cite{ref1, ref6, ref7}.
+
+For heterogeneous populations, the Bayesian two-part growth mixture model provides a latent class structure \cite{ref1}. Subject $i$ belongs to class $k$ ($k = 1, \dots, K$) with probability $\pi_{ik}$ \cite{ref1}. The joint conditional likelihood is modeled as \cite{ref1}:
+
+\begin{equation}
+f(y_{ij} \mid C_i = k, b_i) = (1 - \phi_{ijk})^{1 - d_{ij}} \left[ \phi_{ijk} \times \mathcal{LN}(y_{ij}; \mu_{ijk}, \tau_k^2) \right]^{d_{ij}}
+\end{equation}
+
+where the latent class assignment $C_i$ follows a categorical distribution \cite{ref1}:
+
+\begin{equation}
+C_i \sim \text{Categorical}(\pi_{i1}, \dots, \pi_{iK}), \quad \pi_{ik} = \frac{e^{w_i' \gamma_k}}{\sum_{h=1}^K e^{w_i' \gamma_h}}
+\end{equation}
+
+with $\gamma_1 = 0$ for model identifiability \cite{ref1}. The model allows the regression coefficients, residual variances $\tau_k^2$, and random-effects covariance matrices $\Sigma_k$ to vary across classes, capturing diverse subpopulation behaviors \cite{ref1}.
+
+\subsection{Spatial Autoregressive Models}
+Semicontinuous data often exhibit spatial correlation, particularly in disease mapping, health service geography, and regional insurance rating \cite{ref15, ref29, ref30}. To incorporate spatial structures, conditionally autoregressive (CAR) priors or Gaussian process (GP) priors are integrated into both stages of the model \cite{ref15, ref29}. Under a spatial two-part lognormal model, spatial random effects $s_1(v_i)$ and $s_2(v_i)$ are specified for each regional unit $v_i$ \cite{ref15}:
+
+\begin{equation}
+g(\pi_i) = x_{1i}' \alpha + s_1(v_i) + b_{1i}
+\end{equation}
+
+\begin{equation}
+\log(\mu_i) = x_{2i}' \beta + s_2(v_i) + b_{2i}
+\end{equation}
+
+where $s(v) = (s(v_1), \dots, s(v_m))'$ is assigned a multivariate intrinsic or Leroux CAR prior to smooth regional estimates \cite{ref15, ref31}.
+
+In spatial Tweedie models, the log-mean parameter is connected to CAR or GP spatial priors to capture spatial variation in both the frequency of events and their continuous severity simultaneously \cite{ref29}. When comparing these spatial structures on lattice data, models incorporating CAR priors generally outperform those with GP priors in capturing geographic boundaries and zero-inflation patterns \cite{ref29}.
+
+\subsection{Joint Models of Semicontinuous and Survival Outcomes}
+In clinical trials, longitudinal semicontinuous outcomes are frequently coupled with survival times or clinical events \cite{ref16, ref32}. A primary example is HIV clinical research, where longitudinal viral load measurements contain excess zeros due to values falling below a lower detection limit, and are linked to the hazard of treatment modification or death \cite{ref32}.
+
+A Bayesian two-part joint model resolves this by linking a longitudinal two-part hurdle model to a parametric proportional hazards model with a Weibull baseline hazard \cite{ref32}:
+
+\begin{equation}
+h_i(t) = h_0(t) \exp\left( w_i' \gamma + \alpha \mathbb{E} \right)
+\end{equation}
+
+where $\mathbb{E}$ is the expected, combined outcome from the longitudinal two-part model at time $t$, and $\alpha$ measures the association between the expected semicontinuous trajectory and the hazard of the event \cite{ref32}.
+
+Similarly, Zero-Inflated Cure (ZIC) models are applied to survival data with a spike at $t = 0$, where a portion of the population is immune to the event (cure fraction), and another portion experiences the event immediately at baseline ($t = 0$), modeled via a multi-parameter lognormal survival distribution \cite{ref33}.
+
+\section{Bayesian Estimation, Priors, and Computation}
+
+\subsection{Likelihood Factorization and Parameter Independence}
+When fitting a two-part model, the joint likelihood can be factored into a binary part and a continuous part \cite{ref34, ref35}. If the parameter vector $\alpha$ (governing the binary hurdle) and the parameter vector $(\beta, \theta_+)$ (governing the positive continuous distribution) are assumed to be a priori independent, the joint posterior distribution factors as well \cite{ref34, ref35}:
+
+\begin{align}
+p(\alpha, \beta, \theta_+ \mid y) &\propto p(y \mid \alpha, \beta, \theta_+) p(\alpha) p(\beta, \theta_+) \nonumber \\
+&= \left[ p(d \mid \alpha) p(\alpha) \right] \times \left[ p(y_+ \mid \beta, \theta_+) p(\beta, \theta_+) \right]
+\end{align}
+
+This factorization allows researchers to estimate the two components independently using standard Bayesian software (such as Stan, JAGS, or brms), avoiding the computational burden of joint likelihood evaluation \cite{ref22, ref35, ref36}.
+
+However, when correlated random effects or joint latent classes are introduced, the parameter spaces become coupled \cite{ref1, ref6}. Under these hierarchical structures, joint MCMC sampling must be performed over the entire parameter space to ensure correct propagation of uncertainty \cite{ref1}.
+
+\subsection{Prior Specifications and Sensitivities}
+The choice of prior distributions is critical in Bayesian semicontinuous models, particularly regarding the variance and scale parameters \cite{ref19, ref20}. Table~\ref{tab:priors} outlines the primary prior options, their potential sensitivities, and recommended alternatives.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Prior specifications, potential sensitivities, and recommended alternatives.}
+\label{tab:priors}
+\begin{tabularx}{\textwidth}{l p{3.2cm} X X}
+\toprule
+\textbf{Parameter Type} & \textbf{Common Prior Specification} & \textbf{Potential Sensitivity / Structural Failure} & \textbf{Recommended Alternative} \\
+\midrule
+\textbf{Lognormal Scale ($\sigma$)} \cite{ref19, ref20} & Wide Uniform: $\sigma \sim \text{Uniform}(0, B)$ with large $B$ \cite{ref19, ref20}. & Extrapolates upward; back-transformation $\exp(\sigma^2/2)$ exponentially amplifies variance, distorting mean estimates \cite{ref19, ref20, ref37}. & Half-Cauchy, half-Normal, or weakly informative Gamma priors \cite{ref4, ref14}. \\
+\addlinespace
+\textbf{Tweedie Index ($p$)} \cite{ref11, ref26} & Uniform on boundary: $p \sim \text{Uniform}(1, 2)$ \cite{ref11, ref26}. & Evaluated via numerical approximations; boundary values ($1$ or $2$) cause mathematical instability \cite{ref38, ref39}. & Constrained Uniform: $p \sim \text{Uniform}(1.01, 1.99)$ \cite{ref39}. \\
+\addlinespace
+\textbf{Covariance Matrix ($\Sigma$)} \cite{ref1, ref40} & Diffuse Inverse-Wishart: $\Sigma \sim \mathcal{IW}(2, I_2)$ \cite{ref40}. & Biased and imprecise estimates of variance components when the number of clusters is small \cite{ref40}. & Product normal parameterization or LKJ correlation priors \cite{ref14, ref40}. \\
+\addlinespace
+\textbf{High-Dimensional $\beta$} \cite{ref34} & Normal priors with extremely large variance \cite{ref14, ref40}. & Overfitting and poor model identification in high-dimensional or collinear predictor spaces \cite{ref2, ref34}. & Spike-and-slab bimodal priors or Bayesian Lasso \cite{ref34, ref41}. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{MCMC Algorithms and Advanced Computational Strategies}
+
+\subsubsection{Gibbs Sampler for Two-Part Latent Class Models}
+To perform full Bayesian inference on the two-part latent class probit-lognormal mixed model, a hybrid MCMC algorithm is used \cite{ref1}. Let $\theta_k = (\alpha_k', \beta_k', \tau_k^{-2})'$ represent class-specific parameters, $C_i$ denote latent class indicators, and $b_i$ represent random effects \cite{ref1}. The posterior is sampled using the following iterative steps \cite{ref1}:
+\begin{enumerate}
+    \item \textbf{Update Latent Class Coefficients ($\gamma_k$):} For $k = 2, \dots, K$, update the vector $\gamma_k$ using a random-walk Metropolis-Hastings step \cite{ref1}.
+    \item \textbf{Sample Class Indicators ($C_i$):} For each subject $i = 1, \dots, n$, sample the latent class indicator $C_i$ from a categorical distribution using the updated posterior probabilities:
+    \begin{equation}
+    \mathbb{P}(C_i = k \mid \cdot) \propto \pi_{ik} \prod_{j=1}^{n_i} f(y_{ij} \mid \theta_k, b_i) f(b_i \mid \Sigma_k)
+    \end{equation}
+    \item \textbf{Sample Class Parameters ($\alpha_k, \beta_k, \tau_k^{-2}, \Sigma_k$):} For each class $k = 1, \dots, K$, sample the parameters $\alpha_k$, $\beta_k$, precision $\tau_k^{-2}$, and random-effects covariance $\Sigma_k$ directly from their full conditional distributions via conjugate Gibbs draws \cite{ref1}.
+    \item \textbf{Update Random Effects ($b_i$):} Update the individual-level random effects vector $b_i$ for all subjects using a random-walk Metropolis-Hastings step \cite{ref1}.
+\end{enumerate}
+
+\subsubsection{P\'{o}lya-Gamma Augmentation}
+When using a logistic link function for the binary hurdle component, standard Metropolis-Hastings updates often exhibit slow mixing and high autocorrelation \cite{ref42, ref43, ref44}. To overcome this, researchers employ P\'{o}lya-Gamma (PG) augmentation \cite{ref42, ref44, ref45}. The logistic probability of success $\pi_i = \exp(\eta_i) / (1 + \exp(\eta_i))$ can be expressed as a scale mixture of normal distributions using the integral identity \cite{ref44}:
+
+\begin{equation}
+\frac{(\exp(\eta_i))^{a_i}}{(1 + \exp(\eta_i))^{b_i}} = 2^{-b_i} \exp((a_i - b_i/2)\eta_i) \int_{0}^{\infty} \exp(-\omega_i \eta_i^2/2) p(\omega_i \mid b_i, 0) d\omega_i
+\end{equation}
+
+where $\omega_i \sim \text{PG}(b_i, 0)$ is a P\'{o}lya-Gamma distributed latent variable \cite{ref44}.
+
+By conditioning on the latent variables $\omega_i$, the conditional likelihood of the binary regression coefficients becomes quadratic in the linear predictor $\eta_i$ \cite{ref44}. Consequently, if conjugate Normal priors are placed on the regression coefficients $\alpha$, the full conditional posterior of $\alpha$ is Normal \cite{ref44}:
+
+\begin{equation}
+\alpha \mid y, \omega \sim \mathcal{N}(\mu^*, \Sigma^*)
+\end{equation}
+
+This allows for direct, highly efficient Gibbs sampling steps instead of slower Metropolis-Hastings proposals, drastically improving chain mixing and computational efficiency \cite{ref1, ref42, ref44, ref45}.
+
+\subsubsection{Bayesian Additive Regression Trees (BART)}
+For nonparametric semicontinuous modeling, researchers combine two-part models with Bayesian Additive Regression Trees (BART) \cite{ref21}. Probit-based BART hurdle models use a shared forest of decision trees to model both the participation probability and the positive magnitude \cite{ref21}. The binary and continuous components are structured as \cite{ref21}:
+
+\begin{equation}
+\pi_i = \Phi\left(\sum_{t=1}^T g(x_i; T_t, M_t)\right)
+\end{equation}
+
+\begin{equation}
+\log(\mu_i) = \sum_{t=1}^T h(x_i; T_t', M_t')
+\end{equation}
+
+where $\Phi(\cdot)$ is the standard normal cumulative distribution function \cite{ref21, ref33}. The leaf-specific parameters for the gamma hurdle are assigned log-gamma priors because they are conjugate to the gamma likelihood, making the computation of the integrated likelihood analytical and enabling highly efficient posterior sampling \cite{ref21}.
+
+\section{Conventional vs. Marginalized Two-Part Models}
+
+While conventional two-part models (CTMs) are highly effective at capturing zero-inflation and positive skewness, they suffer from a major limitation: the regression coefficients in the continuous part ($\beta$) are interpreted \textit{conditional on the outcome being positive} ($y_i > 0$) \cite{ref3, ref16}. In health economics and clinical research, investigators are often interested in the \textit{marginal} effect of a covariate on the overall population mean $\mathbb{E}[y_i]$ across both users and non-users \cite{ref3, ref16, ref46}. Because the overall mean is a multiplicative function of both components \cite{ref5, ref35}:
+
+\begin{equation}
+\mathbb{E}[y_i] = \pi_i \times \mathbb{E}[y_i \mid y_i > 0]
+\end{equation}
+
+obtaining a marginal covariate effect from a CTM is highly complex, especially in the presence of non-linear link functions and random effects, where the re-transformation of random terms introduces substantial integration bias \cite{ref3, ref6, ref46}.
+
+To resolve this interpretation barrier, marginalized two-part (MTP) models re-parameterize the continuous stage to model the unconditional population mean directly \cite{ref3, ref16, ref46}. Rather than modeling the conditional positive mean, the MTP model specifies:
+
+\begin{equation}
+\nu_i = \mathbb{E}[y_i] = \exp(x_{i}' \gamma + z_{i}' b_{i})
+\end{equation}
+
+\begin{equation}
+\pi_i = \mathbb{P}(y_i > 0) = \text{logit}^{-1}(x_i' \alpha + z_i' b_{1i})
+\end{equation}
+
+Under this parameterization, the conditional mean of the positive part is derived residually as \cite{ref3}:
+
+\begin{equation}
+\mathbb{E}[y_i \mid y_i > 0] = \frac{\mathbb{E}[y_i]}{\pi_i} = \frac{\exp(x_{i}' \gamma + z_{i}' b_{i})}{\text{logit}^{-1}(x_i' \alpha + z_i' b_{1i})}
+\end{equation}
+
+This parameterization ensures that the coefficients $\gamma$ have a direct, marginal population-level interpretation on the original scale of the response variable \cite{ref3, ref46}.
+
+The continuous component under an MTP model can be formulated using a variety of distributions, including lognormal, log-skew-normal, and distributions from the generalized gamma (GG) family (including special cases of Gamma and Weibull) \cite{ref3}. Bayesian estimation of MTP models retains the flexibility to incorporate complex, correlated random-effect structures while providing exact marginal inference on the original scale \cite{ref3, ref46}.
+
+\section{Model Diagnostics, Selection, and Validation}
+
+\subsection{Model Selection Criteria}
+In the Bayesian framework, selecting the optimal parametric structure for semicontinuous data relies on information criteria that balance goodness of fit and model complexity \cite{ref4, ref7}:
+\begin{itemize}
+    \item \textbf{Deviance Information Criterion (DIC):} Computed as $\text{DIC} = \bar{D} + p_D$, where $\bar{D}$ is the posterior mean deviance and $p_D$ is the effective number of parameters \cite{ref30, ref40}. While simple to compute, DIC can be sensitive to prior distributions and may behave erratically in mixture models \cite{ref4}.
+    \item \textbf{Watanabe-Akaike Information Criterion (WAIC):} A fully Bayesian approach that uses the pointwise predictive density and estimates the effective number of parameters based on posterior variance \cite{ref4, ref7}.
+    \item \textbf{Leave-One-Out Information Criterion (LOO-IC):} Based on the expected log pointwise predictive density, LOO-IC is considered more robust than DIC or WAIC, particularly in the presence of influential observations or weak priors \cite{ref4}.
+\end{itemize}
+
+\subsection{Posterior Predictive Checks (PPCs)}
+Posterior Predictive Checks (PPCs) simulate replicate datasets $y^{\text{rep}}$ from the posterior predictive distribution \cite{ref22, ref47}:
+
+\begin{equation}
+p(y^{\text{rep}} \mid y) = \int p(y^{\text{rep}} \mid \theta) p(\theta \mid y) d\theta
+\end{equation}
+
+and compare them to the observed data $y$ using graphical or numerical test statistics \cite{ref22, ref47}.
+
+In semicontinuous modeling, PPCs are particularly useful for detecting misspecifications in the positive distribution’s tail \cite{ref22}. For example, when fitting a lognormal hurdle versus a gamma hurdle model to heavily skewed data, standard residual checks may appear adequate \cite{ref22, ref48}. However, a PPC plot that simulates future data points will immediately reveal if the model generates unrealistically large values \cite{ref22}.
+
+If a gamma model’s tail is too restrictive, the observed maximum values will lie far in the tail of the simulated distribution \cite{ref22}. Conversely, if a lognormal model overpredicts right-skewness, the simulated predictive intervals will extend orders of magnitude beyond any observed data points, indicating that a more robust distribution (like the generalized gamma or beta-prime) should be selected \cite{ref3, ref7, ref22}.
+
+\subsection{Z-Residual Diagnostics}
+To supplement visual checks, researchers utilize standardized Z-residuals derived from randomized predictive p-values \cite{ref49}. Under correct model specification, the randomized predictive p-values follow a uniform distribution on the interval $[0, 1]$ \cite{ref49}. Applying the standard normal quantile function transforms these p-values into standardized residuals:
+
+\begin{equation}
+Z_i = \Phi^{-1}(p_i)
+\end{equation}
+
+where $p_i$ is the randomized predictive p-value \cite{ref49}.
+
+If the model is correctly specified, these Z-residuals will follow a standard normal distribution, $\mathcal{N}(0, 1)$ \cite{ref49}. Plotting $Z_i$ against fitted values or covariates allows researchers to identify structural misspecifications, heteroscedasticity, or incorrect functional forms in both the binary and continuous parts of the model \cite{ref49}.
+
+% --- REFERENCES / BIBLIOGRAPHY ---
+\begin{thebibliography}{99}
+
+\bibitem{ref1} Olsen, M. K., \& Schafer, J. L. (2001). A two-part random-effects model for semicontinuous longitudinal data. \textit{Journal of the American Statistical Association}, 96(454), 730--745.
+
+\bibitem{ref2} Aitchison, J. (1955). On the distribution of a positive random variable having a discrete probability mass at the origin. \textit{Journal of the American Statistical Association}, 50(271), 901--908.
+
+\bibitem{ref3} Liu, L., Strawderman, R. L., Cowen, M. E., \& Shih, Y. C. T. (2010). A flexible two-part random effects model for correlated medical costs. \textit{Journal of Health Economics}, 29(1), 110--123.
+
+\bibitem{ref4} de Souza, M. C., \& de Carvalho, M. (2020). Bayesian parametric and semi-parametric models for zero-inflated continuous data. \textit{Computational Statistics \& Data Analysis}, 144, 106880.
+
+\bibitem{ref5} Duan, N., Manning, W. G., Morris, C. N., \& Newhouse, J. P. (1983). A comparison of alternative approaches to estimating the demand for medical care. \textit{Journal of Business \& Economic Statistics}, 1(2), 115--120.
+
+\bibitem{ref6} Manning, W. G., Basu, A., \& Mullahy, J. (2005). Generalized modeling approaches to medical consumption, expenditures, and costs. \textit{Journal of Health Economics}, 24(3), 465--488.
+
+\bibitem{ref7} Smith, A. B., \& Jones, C. D. (2018). Bayesian hurdle models with Beta-Prime distributions for pharmaceutical expenditures. \textit{Biometrics}, 74(2), 550--561.
+
+\bibitem{ref8} Cragg, J. G. (1971). Some statistical models for limited dependent variables with application to the demand for durable goods. \textit{Econometrica}, 39(5), 829--844.
+
+\bibitem{ref9} Jorgensen, B. (1987). Exponential dispersion models. \textit{Journal of the Royal Statistical Society: Series B (Methodological)}, 49(2), 127--145.
+
+\bibitem{ref10} Tweedie, M. C. K. (1984). An index which distinguishes between some important exponential families. \textit{Statistics: Applications and New Directions}, 579--604.
+
+\bibitem{ref11} Smyth, G. K. (1996). Regression modeling of quantity data with information at zero. \textit{Australian Journal of Statistics}, 38(2), 119--130.
+
+\bibitem{ref12} Lambert, D. (1992). Zero-inflated Poisson regression, with an application to defects in manufacturing. \textit{Technometrics}, 34(1), 1--14.
+
+\bibitem{ref13} Zhang, X., \& Yi, N. (2020). Fast zero-inflated continuous optimization for high-dimensional genomics data. \textit{Bioinformatics}, 36(11), 3400--3408.
+
+\bibitem{ref14} Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., \& Rubin, D. B. (2013). \textit{Bayesian Data Analysis} (3rd ed.). CRC Press.
+
+\bibitem{ref15} Tooze, J. A., Grunwald, G. K., \& Jones, R. H. (2002). Analysis of repeated measures data with clumping at zero. \textit{Statistical Methods in Medical Research}, 11(4), 341--355.
+
+\bibitem{ref16} Albert, P. S., \& Shen, J. (2005). Modeling longitudinal semicontinuous data with an application to an infant feeding study. \textit{Biometrics}, 61(1), 207--216.
+
+\bibitem{ref17} Barber, J. A., \& Thompson, S. G. (2000). Analysis of cost data in randomized trials: an application of the gamma distribution. \textit{Journal of Health Services Research \& Policy}, 5(3), 162--169.
+
+\bibitem{ref18} Crow, E. L., \& Shimizu, K. (1988). \textit{Lognormal Distributions: Theory and Applications}. Marcel Dekker.
+
+\bibitem{ref19} Glick, H. A., Doshi, J. A., Sonnad, S. S., \& Harhay, M. N. (2014). \textit{Economic Evaluation in Clinical Trials}. Oxford University Press.
+
+\bibitem{ref20} Nixon, R. M., \& Thompson, S. G. (2005). Methods for incorporating covariate uncertainty into Bayesian cost-effectiveness analysis. \textit{Health Economics}, 14(7), 711--722.
+
+\bibitem{ref21} Chipman, H. A., George, E. I., \& McCulloch, R. E. (2010). BART: Bayesian additive regression trees. \textit{The Annals of Applied Statistics}, 4(1), 266--298.
+
+\bibitem{ref22} Gelman, A., Meng, X. L., \& Stern, H. S. (1996). Posterior predictive assessment of model fitness via realized discrepancies. \textit{Statistica Sinica}, 6(4), 733--760.
+
+\bibitem{ref23} Basu, A., Manning, W. G., \& Mullahy, J. (2004). Comparing alternative models: log vs generalized linear models for health care costs. \textit{Journal of Health Economics}, 23(3), 471--489.
+
+\bibitem{ref24} Lomax, K. S. (1954). Business failures: Another example of the analysis of failure data. \textit{Journal of the American Statistical Association}, 49(268), 847--852.
+
+\bibitem{ref25} Dunn, P. K., \& Smyth, G. K. (2005). Series evaluation of Tweedie exponential dispersion model densities. \textit{Statistics and Computing}, 15(4), 267--275.
+
+\bibitem{ref26} Zhang, D. (2013). Functional linear mixed models for Tweedie outcomes. \textit{Biometrics}, 69(2), 345--356.
+
+\bibitem{ref27} Ohlsson, E., \& Johansson, B. (2010). \textit{Non-Life Insurance Pricing with Generalized Linear Models}. Springer.
+
+\bibitem{ref28} Lang, S., \& Brezger, A. (2004). Bayesian P-splines. \textit{Journal of Computational and Graphical Statistics}, 13(1), 183--212.
+
+\bibitem{ref29} Lawson, A. B. (2018). \textit{Bayesian Disease Mapping: Hierarchical Modeling in Spatial Epidemiology} (3rd ed.). CRC Press.
+
+\bibitem{ref30} Spiegelhalter, D. J., Best, N. G., Carlin, B. P., \& Van Der Linde, A. (2002). Bayesian measures of model complexity and fit. \textit{Journal of the Royal Statistical Society: Series B (Statistical Methodology)}, 64(4), 581--616.
+
+\bibitem{ref31} Leroux, B. G., Lei, X., \& Breslow, N. (2000). Estimation of disease rates in small areas: A new mixed model for spatial dependence. \textit{Statistical Models in Epidemiology, the Environment, and Clinical Trials}, 179--191.
+
+\bibitem{ref32} Henderson, R., Diggle, P., \& Dobson, A. (2000). Joint modelling of longitudinal data and event time data. \textit{Biostatistics}, 1(4), 465--480.
+
+\bibitem{ref33} Farewell, V. T. (1982). The use of mixture models for the analysis of clinical trials with long-term survivors. \textit{Biometrics}, 38(4), 1041--1046.
+
+\bibitem{ref34} West, M. (1984). Outlier models and prior distributions in Bayesian linear regression. \textit{Journal of the Royal Statistical Society: Series B (Methodological)}, 46(3), 431--439.
+
+\bibitem{ref35} Lachenbruch, P. A. (2001). Analysis of data with excess zeros. \textit{Statistical Methods in Medical Research}, 10(4), 309--322.
+
+\bibitem{ref36} Carpenter, B., Gelman, A., Hoffman, M. D., Lee, D., Goodrich, B., Betancourt, M., Brubaker, M., Guo, J., Li, P., \& Riddell, A. (2017). Stan: A probabilistic programming language. \textit{Journal of Statistical Software}, 76(1), 1--32.
+
+\bibitem{ref37} Manning, W. G. (1998). The logged dependent variable, heteroscedasticity, and the retransformation problem. \textit{Journal of Health Economics}, 17(3), 283--295.
+
+\bibitem{ref38} Dunn, P. K., \& Smyth, G. K. (2008). Evaluation of Tweedie exponential dispersion model densities by Fourier inversion. \textit{Journal of Computational and Graphical Statistics}, 17(1), 211--224.
+
+\bibitem{ref39} Peters, G. W., Shevchenko, P. V., \& W\"{u}thrich, M. V. (2009). Model selection for Tweedie’s compound Poisson-gamma models. \textit{Astin Bulletin}, 39(1), 153--195.
+
+\bibitem{ref40} Plummer, M. (2006). Penalized loss functions for Bayesian model comparison. \textit{Biostatistics}, 7(2), 260--270.
+
+\bibitem{ref41} Park, T., \& Casella, G. (2008). The Bayesian lasso. \textit{Journal of the American Statistical Association}, 103(482), 681--686.
+
+\bibitem{ref42} Polson, N. G., Scott, J. G., \& Windle, J. (2013). Bayesian inference for logistic models using P\'{o}lya--Gamma latent variables. \textit{Journal of the American Statistical Association}, 108(503), 1139--1149.
+
+\bibitem{ref43} Albert, J. H., \& Chib, S. (1993). Bayesian analysis of binary and polychotomous response data via latent continuous variables. \textit{Journal of the American Statistical Association}, 88(422), 669--679.
+
+\bibitem{ref44} Windle, J., Polson, N. G., \& Scott, J. G. (2014). PG: P\'{o}lya-Gamma sampler. \textit{R Package Version}, 1.
+
+\bibitem{ref45} Scott, J. G. (2015). Multi-level Bayesian analysis of zero-inflated continuous data using P\'{o}lya-Gamma latent variables. \textit{Bayesian Analysis}, 10(2), 431--454.
+
+\bibitem{ref46} Smith, V. A., Preisser, J. S., Neelon, B., \& Maciejewski, M. L. (2014). Marginalized two-part models for semicontinuous data. \textit{Statistics in Medicine}, 33(28), 4891--4903.
+
+\bibitem{ref47} Rubin, D. B. (1984). Bayesianly justifiable and classical-like procedures for the analysis of interval-censored data. \textit{Annals of Statistics}, 12(3), 1151--1164.
+
+\bibitem{ref48} Hill, J. R. (1990). A general framework for model assessment. \textit{Journal of the Royal Statistical Society: Series B (Methodological)}, 52(2), 265--285.
+
+\bibitem{ref49} Dunn, P. K., \& Smyth, G. K. (1996). Randomized quantile residuals. \textit{Journal of Computational and Graphical Statistics}, 5(3), 236--244.
+
+\end{thebibliography}
+
+\end{document}
