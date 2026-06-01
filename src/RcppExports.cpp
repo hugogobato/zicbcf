@@ -13,7 +13,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // bcfCore
 List bcfCore(arma::vec y_, arma::mat Omega_con, arma::mat Omega_mod, arma::mat Omega_con_est, arma::mat Omega_mod_est, NumericVector x_con_, NumericVector x_mod_, NumericVector x_con_est_, NumericVector x_mod_est_, List x_con_info_list, List x_mod_info_list, arma::mat random_des, arma::mat random_var, arma::mat random_var_ix, double random_var_df, arma::vec randeff_scales, int burn, int nd, int thin, int ntree_mod, int ntree_con, double lambda, double nu, arma::mat Sigma0_con, arma::mat Sigma0_mod, double con_alpha, double con_beta, double mod_alpha, double mod_beta, CharacterVector treef_name_, bool est_mod_fits, bool est_con_fits, bool prior_sample, bool use_con_scale, bool use_mod_scale, double con_scale_df, double mod_scale_df, int status_interval, bool vanilla, bool dart, NumericVector var_sizes_con, NumericVector var_sizes_mod, NumericVector lower_bd, NumericVector upper_bd, bool probit);
-RcppExport SEXP _countbcf_bcfCore(SEXP y_SEXP, SEXP Omega_conSEXP, SEXP Omega_modSEXP, SEXP Omega_con_estSEXP, SEXP Omega_mod_estSEXP, SEXP x_con_SEXP, SEXP x_mod_SEXP, SEXP x_con_est_SEXP, SEXP x_mod_est_SEXP, SEXP x_con_info_listSEXP, SEXP x_mod_info_listSEXP, SEXP random_desSEXP, SEXP random_varSEXP, SEXP random_var_ixSEXP, SEXP random_var_dfSEXP, SEXP randeff_scalesSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP ntree_modSEXP, SEXP ntree_conSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP Sigma0_conSEXP, SEXP Sigma0_modSEXP, SEXP con_alphaSEXP, SEXP con_betaSEXP, SEXP mod_alphaSEXP, SEXP mod_betaSEXP, SEXP treef_name_SEXP, SEXP est_mod_fitsSEXP, SEXP est_con_fitsSEXP, SEXP prior_sampleSEXP, SEXP use_con_scaleSEXP, SEXP use_mod_scaleSEXP, SEXP con_scale_dfSEXP, SEXP mod_scale_dfSEXP, SEXP status_intervalSEXP, SEXP vanillaSEXP, SEXP dartSEXP, SEXP var_sizes_conSEXP, SEXP var_sizes_modSEXP, SEXP lower_bdSEXP, SEXP upper_bdSEXP, SEXP probitSEXP) {
+RcppExport SEXP _zicbcf_bcfCore(SEXP y_SEXP, SEXP Omega_conSEXP, SEXP Omega_modSEXP, SEXP Omega_con_estSEXP, SEXP Omega_mod_estSEXP, SEXP x_con_SEXP, SEXP x_mod_SEXP, SEXP x_con_est_SEXP, SEXP x_mod_est_SEXP, SEXP x_con_info_listSEXP, SEXP x_mod_info_listSEXP, SEXP random_desSEXP, SEXP random_varSEXP, SEXP random_var_ixSEXP, SEXP random_var_dfSEXP, SEXP randeff_scalesSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP ntree_modSEXP, SEXP ntree_conSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP Sigma0_conSEXP, SEXP Sigma0_modSEXP, SEXP con_alphaSEXP, SEXP con_betaSEXP, SEXP mod_alphaSEXP, SEXP mod_betaSEXP, SEXP treef_name_SEXP, SEXP est_mod_fitsSEXP, SEXP est_con_fitsSEXP, SEXP prior_sampleSEXP, SEXP use_con_scaleSEXP, SEXP use_mod_scaleSEXP, SEXP con_scale_dfSEXP, SEXP mod_scale_dfSEXP, SEXP status_intervalSEXP, SEXP vanillaSEXP, SEXP dartSEXP, SEXP var_sizes_conSEXP, SEXP var_sizes_modSEXP, SEXP lower_bdSEXP, SEXP upper_bdSEXP, SEXP probitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -66,138 +66,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// countbart
-List countbart(arma::vec y_, arma::vec offset_, List bart_specs, List bart_designs, arma::mat random_des, arma::mat random_var, arma::mat random_var_ix, double random_var_df, arma::vec randeff_scales, int burn, int nd, int thin, int count_model, double lambda, double nu, double kappa_a, double kappa_b, double leaf_c, double leaf_d, double z_c, double z_d, double kappa_prop_sd, bool return_trees, bool save_trees, bool est_mod_fits, bool est_con_fits, bool prior_sample, int status_interval, NumericVector lower_bd, NumericVector upper_bd, bool probit, bool text_trace, bool R_trace);
-RcppExport SEXP _countbcf_countbart(SEXP y_SEXP, SEXP offset_SEXP, SEXP bart_specsSEXP, SEXP bart_designsSEXP, SEXP random_desSEXP, SEXP random_varSEXP, SEXP random_var_ixSEXP, SEXP random_var_dfSEXP, SEXP randeff_scalesSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP count_modelSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP kappa_aSEXP, SEXP kappa_bSEXP, SEXP leaf_cSEXP, SEXP leaf_dSEXP, SEXP z_cSEXP, SEXP z_dSEXP, SEXP kappa_prop_sdSEXP, SEXP return_treesSEXP, SEXP save_treesSEXP, SEXP est_mod_fitsSEXP, SEXP est_con_fitsSEXP, SEXP prior_sampleSEXP, SEXP status_intervalSEXP, SEXP lower_bdSEXP, SEXP upper_bdSEXP, SEXP probitSEXP, SEXP text_traceSEXP, SEXP R_traceSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type y_(y_SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type offset_(offset_SEXP);
-    Rcpp::traits::input_parameter< List >::type bart_specs(bart_specsSEXP);
-    Rcpp::traits::input_parameter< List >::type bart_designs(bart_designsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_des(random_desSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_var(random_varSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_var_ix(random_var_ixSEXP);
-    Rcpp::traits::input_parameter< double >::type random_var_df(random_var_dfSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type randeff_scales(randeff_scalesSEXP);
-    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< int >::type nd(ndSEXP);
-    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
-    Rcpp::traits::input_parameter< int >::type count_model(count_modelSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< double >::type kappa_a(kappa_aSEXP);
-    Rcpp::traits::input_parameter< double >::type kappa_b(kappa_bSEXP);
-    Rcpp::traits::input_parameter< double >::type leaf_c(leaf_cSEXP);
-    Rcpp::traits::input_parameter< double >::type leaf_d(leaf_dSEXP);
-    Rcpp::traits::input_parameter< double >::type z_c(z_cSEXP);
-    Rcpp::traits::input_parameter< double >::type z_d(z_dSEXP);
-    Rcpp::traits::input_parameter< double >::type kappa_prop_sd(kappa_prop_sdSEXP);
-    Rcpp::traits::input_parameter< bool >::type return_trees(return_treesSEXP);
-    Rcpp::traits::input_parameter< bool >::type save_trees(save_treesSEXP);
-    Rcpp::traits::input_parameter< bool >::type est_mod_fits(est_mod_fitsSEXP);
-    Rcpp::traits::input_parameter< bool >::type est_con_fits(est_con_fitsSEXP);
-    Rcpp::traits::input_parameter< bool >::type prior_sample(prior_sampleSEXP);
-    Rcpp::traits::input_parameter< int >::type status_interval(status_intervalSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type lower_bd(lower_bdSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type upper_bd(upper_bdSEXP);
-    Rcpp::traits::input_parameter< bool >::type probit(probitSEXP);
-    Rcpp::traits::input_parameter< bool >::type text_trace(text_traceSEXP);
-    Rcpp::traits::input_parameter< bool >::type R_trace(R_traceSEXP);
-    rcpp_result_gen = Rcpp::wrap(countbart(y_, offset_, bart_specs, bart_designs, random_des, random_var, random_var_ix, random_var_df, randeff_scales, burn, nd, thin, count_model, lambda, nu, kappa_a, kappa_b, leaf_c, leaf_d, z_c, z_d, kappa_prop_sd, return_trees, save_trees, est_mod_fits, est_con_fits, prior_sample, status_interval, lower_bd, upper_bd, probit, text_trace, R_trace));
-    return rcpp_result_gen;
-END_RCPP
-}
-// countbcf
-List countbcf(arma::vec y_, arma::vec offset_, List bart_specs, List bart_designs, arma::mat random_des, arma::mat random_var, arma::mat random_var_ix, double random_var_df, arma::vec randeff_scales, int burn, int nd, int thin, int count_model, double lambda, double nu, double kappa_a, double kappa_b, double leaf_c, double leaf_d, double z_c, double z_d, double kappa_prop_sd, bool return_trees, bool save_trees, bool est_mod_fits, bool est_con_fits, bool prior_sample, int status_interval, NumericVector lower_bd, NumericVector upper_bd, bool probit, bool text_trace, bool R_trace);
-RcppExport SEXP _countbcf_countbcf(SEXP y_SEXP, SEXP offset_SEXP, SEXP bart_specsSEXP, SEXP bart_designsSEXP, SEXP random_desSEXP, SEXP random_varSEXP, SEXP random_var_ixSEXP, SEXP random_var_dfSEXP, SEXP randeff_scalesSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP count_modelSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP kappa_aSEXP, SEXP kappa_bSEXP, SEXP leaf_cSEXP, SEXP leaf_dSEXP, SEXP z_cSEXP, SEXP z_dSEXP, SEXP kappa_prop_sdSEXP, SEXP return_treesSEXP, SEXP save_treesSEXP, SEXP est_mod_fitsSEXP, SEXP est_con_fitsSEXP, SEXP prior_sampleSEXP, SEXP status_intervalSEXP, SEXP lower_bdSEXP, SEXP upper_bdSEXP, SEXP probitSEXP, SEXP text_traceSEXP, SEXP R_traceSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type y_(y_SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type offset_(offset_SEXP);
-    Rcpp::traits::input_parameter< List >::type bart_specs(bart_specsSEXP);
-    Rcpp::traits::input_parameter< List >::type bart_designs(bart_designsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_des(random_desSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_var(random_varSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_var_ix(random_var_ixSEXP);
-    Rcpp::traits::input_parameter< double >::type random_var_df(random_var_dfSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type randeff_scales(randeff_scalesSEXP);
-    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< int >::type nd(ndSEXP);
-    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
-    Rcpp::traits::input_parameter< int >::type count_model(count_modelSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< double >::type kappa_a(kappa_aSEXP);
-    Rcpp::traits::input_parameter< double >::type kappa_b(kappa_bSEXP);
-    Rcpp::traits::input_parameter< double >::type leaf_c(leaf_cSEXP);
-    Rcpp::traits::input_parameter< double >::type leaf_d(leaf_dSEXP);
-    Rcpp::traits::input_parameter< double >::type z_c(z_cSEXP);
-    Rcpp::traits::input_parameter< double >::type z_d(z_dSEXP);
-    Rcpp::traits::input_parameter< double >::type kappa_prop_sd(kappa_prop_sdSEXP);
-    Rcpp::traits::input_parameter< bool >::type return_trees(return_treesSEXP);
-    Rcpp::traits::input_parameter< bool >::type save_trees(save_treesSEXP);
-    Rcpp::traits::input_parameter< bool >::type est_mod_fits(est_mod_fitsSEXP);
-    Rcpp::traits::input_parameter< bool >::type est_con_fits(est_con_fitsSEXP);
-    Rcpp::traits::input_parameter< bool >::type prior_sample(prior_sampleSEXP);
-    Rcpp::traits::input_parameter< int >::type status_interval(status_intervalSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type lower_bd(lower_bdSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type upper_bd(upper_bdSEXP);
-    Rcpp::traits::input_parameter< bool >::type probit(probitSEXP);
-    Rcpp::traits::input_parameter< bool >::type text_trace(text_traceSEXP);
-    Rcpp::traits::input_parameter< bool >::type R_trace(R_traceSEXP);
-    rcpp_result_gen = Rcpp::wrap(countbcf(y_, offset_, bart_specs, bart_designs, random_des, random_var, random_var_ix, random_var_df, randeff_scales, burn, nd, thin, count_model, lambda, nu, kappa_a, kappa_b, leaf_c, leaf_d, z_c, z_d, kappa_prop_sd, return_trees, save_trees, est_mod_fits, est_con_fits, prior_sample, status_interval, lower_bd, upper_bd, probit, text_trace, R_trace));
-    return rcpp_result_gen;
-END_RCPP
-}
-// countbcf_pathb
-List countbcf_pathb(arma::vec y_, arma::vec offset_, List bart_specs, List bart_designs, arma::mat random_des, arma::mat random_var, arma::mat random_var_ix, double random_var_df, arma::vec randeff_scales, int burn, int nd, int thin, int count_model, double lambda, double nu, double kappa_a, double kappa_b, double leaf_c, double leaf_d, double z_c, double z_d, double kappa_prop_sd, bool return_trees, bool save_trees, bool est_mod_fits, bool est_con_fits, bool prior_sample, int status_interval, NumericVector lower_bd, NumericVector upper_bd, bool probit, bool text_trace, bool R_trace);
-RcppExport SEXP _countbcf_countbcf_pathb(SEXP y_SEXP, SEXP offset_SEXP, SEXP bart_specsSEXP, SEXP bart_designsSEXP, SEXP random_desSEXP, SEXP random_varSEXP, SEXP random_var_ixSEXP, SEXP random_var_dfSEXP, SEXP randeff_scalesSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP count_modelSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP kappa_aSEXP, SEXP kappa_bSEXP, SEXP leaf_cSEXP, SEXP leaf_dSEXP, SEXP z_cSEXP, SEXP z_dSEXP, SEXP kappa_prop_sdSEXP, SEXP return_treesSEXP, SEXP save_treesSEXP, SEXP est_mod_fitsSEXP, SEXP est_con_fitsSEXP, SEXP prior_sampleSEXP, SEXP status_intervalSEXP, SEXP lower_bdSEXP, SEXP upper_bdSEXP, SEXP probitSEXP, SEXP text_traceSEXP, SEXP R_traceSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type y_(y_SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type offset_(offset_SEXP);
-    Rcpp::traits::input_parameter< List >::type bart_specs(bart_specsSEXP);
-    Rcpp::traits::input_parameter< List >::type bart_designs(bart_designsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_des(random_desSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_var(random_varSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_var_ix(random_var_ixSEXP);
-    Rcpp::traits::input_parameter< double >::type random_var_df(random_var_dfSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type randeff_scales(randeff_scalesSEXP);
-    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< int >::type nd(ndSEXP);
-    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
-    Rcpp::traits::input_parameter< int >::type count_model(count_modelSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< double >::type kappa_a(kappa_aSEXP);
-    Rcpp::traits::input_parameter< double >::type kappa_b(kappa_bSEXP);
-    Rcpp::traits::input_parameter< double >::type leaf_c(leaf_cSEXP);
-    Rcpp::traits::input_parameter< double >::type leaf_d(leaf_dSEXP);
-    Rcpp::traits::input_parameter< double >::type z_c(z_cSEXP);
-    Rcpp::traits::input_parameter< double >::type z_d(z_dSEXP);
-    Rcpp::traits::input_parameter< double >::type kappa_prop_sd(kappa_prop_sdSEXP);
-    Rcpp::traits::input_parameter< bool >::type return_trees(return_treesSEXP);
-    Rcpp::traits::input_parameter< bool >::type save_trees(save_treesSEXP);
-    Rcpp::traits::input_parameter< bool >::type est_mod_fits(est_mod_fitsSEXP);
-    Rcpp::traits::input_parameter< bool >::type est_con_fits(est_con_fitsSEXP);
-    Rcpp::traits::input_parameter< bool >::type prior_sample(prior_sampleSEXP);
-    Rcpp::traits::input_parameter< int >::type status_interval(status_intervalSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type lower_bd(lower_bdSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type upper_bd(upper_bdSEXP);
-    Rcpp::traits::input_parameter< bool >::type probit(probitSEXP);
-    Rcpp::traits::input_parameter< bool >::type text_trace(text_traceSEXP);
-    Rcpp::traits::input_parameter< bool >::type R_trace(R_traceSEXP);
-    rcpp_result_gen = Rcpp::wrap(countbcf_pathb(y_, offset_, bart_specs, bart_designs, random_des, random_var, random_var_ix, random_var_df, randeff_scales, burn, nd, thin, count_model, lambda, nu, kappa_a, kappa_b, leaf_c, leaf_d, z_c, z_d, kappa_prop_sd, return_trees, save_trees, est_mod_fits, est_con_fits, prior_sample, status_interval, lower_bd, upper_bd, probit, text_trace, R_trace));
-    return rcpp_result_gen;
-END_RCPP
-}
 // rgig
 double rgig(double lambda, double chi, double psi);
-RcppExport SEXP _countbcf_rgig(SEXP lambdaSEXP, SEXP chiSEXP, SEXP psiSEXP) {
+RcppExport SEXP _zicbcf_rgig(SEXP lambdaSEXP, SEXP chiSEXP, SEXP psiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -210,7 +81,7 @@ END_RCPP
 }
 // gig_norm
 double gig_norm(double lambda, double chi, double psi);
-RcppExport SEXP _countbcf_gig_norm(SEXP lambdaSEXP, SEXP chiSEXP, SEXP psiSEXP) {
+RcppExport SEXP _zicbcf_gig_norm(SEXP lambdaSEXP, SEXP chiSEXP, SEXP psiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -221,253 +92,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// multibart
-List multibart(arma::vec y_, List bart_specs, List bart_designs, arma::mat random_des, arma::mat random_var, arma::mat random_var_ix, double random_var_df, arma::vec randeff_scales, int burn, int nd, int thin, double lambda, double nu, bool return_trees, bool save_trees, bool est_mod_fits, bool est_con_fits, bool prior_sample, int status_interval, NumericVector lower_bd, NumericVector upper_bd, bool probit, bool text_trace, bool R_trace);
-RcppExport SEXP _countbcf_multibart(SEXP y_SEXP, SEXP bart_specsSEXP, SEXP bart_designsSEXP, SEXP random_desSEXP, SEXP random_varSEXP, SEXP random_var_ixSEXP, SEXP random_var_dfSEXP, SEXP randeff_scalesSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP return_treesSEXP, SEXP save_treesSEXP, SEXP est_mod_fitsSEXP, SEXP est_con_fitsSEXP, SEXP prior_sampleSEXP, SEXP status_intervalSEXP, SEXP lower_bdSEXP, SEXP upper_bdSEXP, SEXP probitSEXP, SEXP text_traceSEXP, SEXP R_traceSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type y_(y_SEXP);
-    Rcpp::traits::input_parameter< List >::type bart_specs(bart_specsSEXP);
-    Rcpp::traits::input_parameter< List >::type bart_designs(bart_designsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_des(random_desSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_var(random_varSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_var_ix(random_var_ixSEXP);
-    Rcpp::traits::input_parameter< double >::type random_var_df(random_var_dfSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type randeff_scales(randeff_scalesSEXP);
-    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< int >::type nd(ndSEXP);
-    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< bool >::type return_trees(return_treesSEXP);
-    Rcpp::traits::input_parameter< bool >::type save_trees(save_treesSEXP);
-    Rcpp::traits::input_parameter< bool >::type est_mod_fits(est_mod_fitsSEXP);
-    Rcpp::traits::input_parameter< bool >::type est_con_fits(est_con_fitsSEXP);
-    Rcpp::traits::input_parameter< bool >::type prior_sample(prior_sampleSEXP);
-    Rcpp::traits::input_parameter< int >::type status_interval(status_intervalSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type lower_bd(lower_bdSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type upper_bd(upper_bdSEXP);
-    Rcpp::traits::input_parameter< bool >::type probit(probitSEXP);
-    Rcpp::traits::input_parameter< bool >::type text_trace(text_traceSEXP);
-    Rcpp::traits::input_parameter< bool >::type R_trace(R_traceSEXP);
-    rcpp_result_gen = Rcpp::wrap(multibart(y_, bart_specs, bart_designs, random_des, random_var, random_var_ix, random_var_df, randeff_scales, burn, nd, thin, lambda, nu, return_trees, save_trees, est_mod_fits, est_con_fits, prior_sample, status_interval, lower_bd, upper_bd, probit, text_trace, R_trace));
-    return rcpp_result_gen;
-END_RCPP
-}
-// pathc_bcfCore
-List pathc_bcfCore(arma::vec y_, arma::vec I_, arma::mat Omega_sel_con, arma::mat Omega_sel_mod, arma::mat Omega_out_con, arma::mat Omega_out_mod, arma::mat Omega_sel_con_est, arma::mat Omega_sel_mod_est, arma::mat Omega_out_con_est, arma::mat Omega_out_mod_est, NumericVector x_sel_con_, NumericVector x_sel_mod_, NumericVector x_out_con_, NumericVector x_out_mod_, NumericVector x_sel_con_est_, NumericVector x_sel_mod_est_, NumericVector x_out_con_est_, NumericVector x_out_mod_est_, List x_sel_con_info_list, List x_sel_mod_info_list, List x_out_con_info_list, List x_out_mod_info_list, int burn, int nd, int thin, int ntree_sel_con, int ntree_sel_mod, int ntree_out_con, int ntree_out_mod, double lambda, double nu, arma::mat Sigma0_sel_con, arma::mat Sigma0_sel_mod, arma::mat Sigma0_out_con, arma::mat Sigma0_out_mod, double sel_con_alpha, double sel_con_beta, double sel_mod_alpha, double sel_mod_beta, double out_con_alpha, double out_con_beta, double out_mod_alpha, double out_mod_beta, double con_scale_df, double mod_scale_df, int status_interval);
-RcppExport SEXP _countbcf_pathc_bcfCore(SEXP y_SEXP, SEXP I_SEXP, SEXP Omega_sel_conSEXP, SEXP Omega_sel_modSEXP, SEXP Omega_out_conSEXP, SEXP Omega_out_modSEXP, SEXP Omega_sel_con_estSEXP, SEXP Omega_sel_mod_estSEXP, SEXP Omega_out_con_estSEXP, SEXP Omega_out_mod_estSEXP, SEXP x_sel_con_SEXP, SEXP x_sel_mod_SEXP, SEXP x_out_con_SEXP, SEXP x_out_mod_SEXP, SEXP x_sel_con_est_SEXP, SEXP x_sel_mod_est_SEXP, SEXP x_out_con_est_SEXP, SEXP x_out_mod_est_SEXP, SEXP x_sel_con_info_listSEXP, SEXP x_sel_mod_info_listSEXP, SEXP x_out_con_info_listSEXP, SEXP x_out_mod_info_listSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP ntree_sel_conSEXP, SEXP ntree_sel_modSEXP, SEXP ntree_out_conSEXP, SEXP ntree_out_modSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP Sigma0_sel_conSEXP, SEXP Sigma0_sel_modSEXP, SEXP Sigma0_out_conSEXP, SEXP Sigma0_out_modSEXP, SEXP sel_con_alphaSEXP, SEXP sel_con_betaSEXP, SEXP sel_mod_alphaSEXP, SEXP sel_mod_betaSEXP, SEXP out_con_alphaSEXP, SEXP out_con_betaSEXP, SEXP out_mod_alphaSEXP, SEXP out_mod_betaSEXP, SEXP con_scale_dfSEXP, SEXP mod_scale_dfSEXP, SEXP status_intervalSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type y_(y_SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type I_(I_SEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_sel_con(Omega_sel_conSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_sel_mod(Omega_sel_modSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_con(Omega_out_conSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_mod(Omega_out_modSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_sel_con_est(Omega_sel_con_estSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_sel_mod_est(Omega_sel_mod_estSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_con_est(Omega_out_con_estSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_mod_est(Omega_out_mod_estSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_sel_con_(x_sel_con_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_sel_mod_(x_sel_mod_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_con_(x_out_con_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_mod_(x_out_mod_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_sel_con_est_(x_sel_con_est_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_sel_mod_est_(x_sel_mod_est_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_con_est_(x_out_con_est_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_mod_est_(x_out_mod_est_SEXP);
-    Rcpp::traits::input_parameter< List >::type x_sel_con_info_list(x_sel_con_info_listSEXP);
-    Rcpp::traits::input_parameter< List >::type x_sel_mod_info_list(x_sel_mod_info_listSEXP);
-    Rcpp::traits::input_parameter< List >::type x_out_con_info_list(x_out_con_info_listSEXP);
-    Rcpp::traits::input_parameter< List >::type x_out_mod_info_list(x_out_mod_info_listSEXP);
-    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< int >::type nd(ndSEXP);
-    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
-    Rcpp::traits::input_parameter< int >::type ntree_sel_con(ntree_sel_conSEXP);
-    Rcpp::traits::input_parameter< int >::type ntree_sel_mod(ntree_sel_modSEXP);
-    Rcpp::traits::input_parameter< int >::type ntree_out_con(ntree_out_conSEXP);
-    Rcpp::traits::input_parameter< int >::type ntree_out_mod(ntree_out_modSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma0_sel_con(Sigma0_sel_conSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma0_sel_mod(Sigma0_sel_modSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma0_out_con(Sigma0_out_conSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma0_out_mod(Sigma0_out_modSEXP);
-    Rcpp::traits::input_parameter< double >::type sel_con_alpha(sel_con_alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type sel_con_beta(sel_con_betaSEXP);
-    Rcpp::traits::input_parameter< double >::type sel_mod_alpha(sel_mod_alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type sel_mod_beta(sel_mod_betaSEXP);
-    Rcpp::traits::input_parameter< double >::type out_con_alpha(out_con_alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type out_con_beta(out_con_betaSEXP);
-    Rcpp::traits::input_parameter< double >::type out_mod_alpha(out_mod_alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type out_mod_beta(out_mod_betaSEXP);
-    Rcpp::traits::input_parameter< double >::type con_scale_df(con_scale_dfSEXP);
-    Rcpp::traits::input_parameter< double >::type mod_scale_df(mod_scale_dfSEXP);
-    Rcpp::traits::input_parameter< int >::type status_interval(status_intervalSEXP);
-    rcpp_result_gen = Rcpp::wrap(pathc_bcfCore(y_, I_, Omega_sel_con, Omega_sel_mod, Omega_out_con, Omega_out_mod, Omega_sel_con_est, Omega_sel_mod_est, Omega_out_con_est, Omega_out_mod_est, x_sel_con_, x_sel_mod_, x_out_con_, x_out_mod_, x_sel_con_est_, x_sel_mod_est_, x_out_con_est_, x_out_mod_est_, x_sel_con_info_list, x_sel_mod_info_list, x_out_con_info_list, x_out_mod_info_list, burn, nd, thin, ntree_sel_con, ntree_sel_mod, ntree_out_con, ntree_out_mod, lambda, nu, Sigma0_sel_con, Sigma0_sel_mod, Sigma0_out_con, Sigma0_out_mod, sel_con_alpha, sel_con_beta, sel_mod_alpha, sel_mod_beta, out_con_alpha, out_con_beta, out_mod_alpha, out_mod_beta, con_scale_df, mod_scale_df, status_interval));
-    return rcpp_result_gen;
-END_RCPP
-}
-// pathca_bcfCore
-List pathca_bcfCore(arma::vec y_, arma::vec I_, arma::mat Omega_sel_con, arma::mat Omega_sel_mod, arma::mat Omega_out_con, arma::mat Omega_out_mod, arma::mat Omega_out_con_full, arma::mat Omega_out_mod_full, arma::mat Omega_sel_con_est, arma::mat Omega_sel_mod_est, arma::mat Omega_out_con_est, arma::mat Omega_out_mod_est, NumericVector x_sel_con_, NumericVector x_sel_mod_, NumericVector x_out_con_, NumericVector x_out_mod_, NumericVector x_out_con_full_, NumericVector x_out_mod_full_, NumericVector x_sel_con_est_, NumericVector x_sel_mod_est_, NumericVector x_out_con_est_, NumericVector x_out_mod_est_, List x_sel_con_info_list, List x_sel_mod_info_list, List x_out_con_info_list, List x_out_mod_info_list, int burn, int nd, int thin, int ntree_sel_con, int ntree_sel_mod, int ntree_out_con, int ntree_out_mod, double lambda, double nu, arma::mat Sigma0_sel_con, arma::mat Sigma0_sel_mod, arma::mat Sigma0_out_con, arma::mat Sigma0_out_mod, double sel_con_alpha, double sel_con_beta, double sel_mod_alpha, double sel_mod_beta, double out_con_alpha, double out_con_beta, double out_mod_alpha, double out_mod_beta, double con_scale_df, double mod_scale_df, int status_interval);
-RcppExport SEXP _countbcf_pathca_bcfCore(SEXP y_SEXP, SEXP I_SEXP, SEXP Omega_sel_conSEXP, SEXP Omega_sel_modSEXP, SEXP Omega_out_conSEXP, SEXP Omega_out_modSEXP, SEXP Omega_out_con_fullSEXP, SEXP Omega_out_mod_fullSEXP, SEXP Omega_sel_con_estSEXP, SEXP Omega_sel_mod_estSEXP, SEXP Omega_out_con_estSEXP, SEXP Omega_out_mod_estSEXP, SEXP x_sel_con_SEXP, SEXP x_sel_mod_SEXP, SEXP x_out_con_SEXP, SEXP x_out_mod_SEXP, SEXP x_out_con_full_SEXP, SEXP x_out_mod_full_SEXP, SEXP x_sel_con_est_SEXP, SEXP x_sel_mod_est_SEXP, SEXP x_out_con_est_SEXP, SEXP x_out_mod_est_SEXP, SEXP x_sel_con_info_listSEXP, SEXP x_sel_mod_info_listSEXP, SEXP x_out_con_info_listSEXP, SEXP x_out_mod_info_listSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP ntree_sel_conSEXP, SEXP ntree_sel_modSEXP, SEXP ntree_out_conSEXP, SEXP ntree_out_modSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP Sigma0_sel_conSEXP, SEXP Sigma0_sel_modSEXP, SEXP Sigma0_out_conSEXP, SEXP Sigma0_out_modSEXP, SEXP sel_con_alphaSEXP, SEXP sel_con_betaSEXP, SEXP sel_mod_alphaSEXP, SEXP sel_mod_betaSEXP, SEXP out_con_alphaSEXP, SEXP out_con_betaSEXP, SEXP out_mod_alphaSEXP, SEXP out_mod_betaSEXP, SEXP con_scale_dfSEXP, SEXP mod_scale_dfSEXP, SEXP status_intervalSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type y_(y_SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type I_(I_SEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_sel_con(Omega_sel_conSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_sel_mod(Omega_sel_modSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_con(Omega_out_conSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_mod(Omega_out_modSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_con_full(Omega_out_con_fullSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_mod_full(Omega_out_mod_fullSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_sel_con_est(Omega_sel_con_estSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_sel_mod_est(Omega_sel_mod_estSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_con_est(Omega_out_con_estSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_mod_est(Omega_out_mod_estSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_sel_con_(x_sel_con_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_sel_mod_(x_sel_mod_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_con_(x_out_con_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_mod_(x_out_mod_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_con_full_(x_out_con_full_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_mod_full_(x_out_mod_full_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_sel_con_est_(x_sel_con_est_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_sel_mod_est_(x_sel_mod_est_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_con_est_(x_out_con_est_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_mod_est_(x_out_mod_est_SEXP);
-    Rcpp::traits::input_parameter< List >::type x_sel_con_info_list(x_sel_con_info_listSEXP);
-    Rcpp::traits::input_parameter< List >::type x_sel_mod_info_list(x_sel_mod_info_listSEXP);
-    Rcpp::traits::input_parameter< List >::type x_out_con_info_list(x_out_con_info_listSEXP);
-    Rcpp::traits::input_parameter< List >::type x_out_mod_info_list(x_out_mod_info_listSEXP);
-    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< int >::type nd(ndSEXP);
-    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
-    Rcpp::traits::input_parameter< int >::type ntree_sel_con(ntree_sel_conSEXP);
-    Rcpp::traits::input_parameter< int >::type ntree_sel_mod(ntree_sel_modSEXP);
-    Rcpp::traits::input_parameter< int >::type ntree_out_con(ntree_out_conSEXP);
-    Rcpp::traits::input_parameter< int >::type ntree_out_mod(ntree_out_modSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma0_sel_con(Sigma0_sel_conSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma0_sel_mod(Sigma0_sel_modSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma0_out_con(Sigma0_out_conSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma0_out_mod(Sigma0_out_modSEXP);
-    Rcpp::traits::input_parameter< double >::type sel_con_alpha(sel_con_alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type sel_con_beta(sel_con_betaSEXP);
-    Rcpp::traits::input_parameter< double >::type sel_mod_alpha(sel_mod_alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type sel_mod_beta(sel_mod_betaSEXP);
-    Rcpp::traits::input_parameter< double >::type out_con_alpha(out_con_alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type out_con_beta(out_con_betaSEXP);
-    Rcpp::traits::input_parameter< double >::type out_mod_alpha(out_mod_alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type out_mod_beta(out_mod_betaSEXP);
-    Rcpp::traits::input_parameter< double >::type con_scale_df(con_scale_dfSEXP);
-    Rcpp::traits::input_parameter< double >::type mod_scale_df(mod_scale_dfSEXP);
-    Rcpp::traits::input_parameter< int >::type status_interval(status_intervalSEXP);
-    rcpp_result_gen = Rcpp::wrap(pathca_bcfCore(y_, I_, Omega_sel_con, Omega_sel_mod, Omega_out_con, Omega_out_mod, Omega_out_con_full, Omega_out_mod_full, Omega_sel_con_est, Omega_sel_mod_est, Omega_out_con_est, Omega_out_mod_est, x_sel_con_, x_sel_mod_, x_out_con_, x_out_mod_, x_out_con_full_, x_out_mod_full_, x_sel_con_est_, x_sel_mod_est_, x_out_con_est_, x_out_mod_est_, x_sel_con_info_list, x_sel_mod_info_list, x_out_con_info_list, x_out_mod_info_list, burn, nd, thin, ntree_sel_con, ntree_sel_mod, ntree_out_con, ntree_out_mod, lambda, nu, Sigma0_sel_con, Sigma0_sel_mod, Sigma0_out_con, Sigma0_out_mod, sel_con_alpha, sel_con_beta, sel_mod_alpha, sel_mod_beta, out_con_alpha, out_con_beta, out_mod_alpha, out_mod_beta, con_scale_df, mod_scale_df, status_interval));
-    return rcpp_result_gen;
-END_RCPP
-}
-// pathd_gammabcf
-List pathd_gammabcf(arma::vec y_, arma::vec offset_, List bart_specs, List bart_designs, arma::mat random_des, arma::mat random_var, arma::mat random_var_ix, double random_var_df, arma::vec randeff_scales, int burn, int nd, int thin, double kappa_a, double kappa_b, double leaf_c, double leaf_d, double kappa_prop_sd, bool return_trees, bool save_trees, bool est_mod_fits, bool est_con_fits, bool prior_sample, int status_interval, bool text_trace);
-RcppExport SEXP _countbcf_pathd_gammabcf(SEXP y_SEXP, SEXP offset_SEXP, SEXP bart_specsSEXP, SEXP bart_designsSEXP, SEXP random_desSEXP, SEXP random_varSEXP, SEXP random_var_ixSEXP, SEXP random_var_dfSEXP, SEXP randeff_scalesSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP kappa_aSEXP, SEXP kappa_bSEXP, SEXP leaf_cSEXP, SEXP leaf_dSEXP, SEXP kappa_prop_sdSEXP, SEXP return_treesSEXP, SEXP save_treesSEXP, SEXP est_mod_fitsSEXP, SEXP est_con_fitsSEXP, SEXP prior_sampleSEXP, SEXP status_intervalSEXP, SEXP text_traceSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type y_(y_SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type offset_(offset_SEXP);
-    Rcpp::traits::input_parameter< List >::type bart_specs(bart_specsSEXP);
-    Rcpp::traits::input_parameter< List >::type bart_designs(bart_designsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_des(random_desSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_var(random_varSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type random_var_ix(random_var_ixSEXP);
-    Rcpp::traits::input_parameter< double >::type random_var_df(random_var_dfSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type randeff_scales(randeff_scalesSEXP);
-    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< int >::type nd(ndSEXP);
-    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
-    Rcpp::traits::input_parameter< double >::type kappa_a(kappa_aSEXP);
-    Rcpp::traits::input_parameter< double >::type kappa_b(kappa_bSEXP);
-    Rcpp::traits::input_parameter< double >::type leaf_c(leaf_cSEXP);
-    Rcpp::traits::input_parameter< double >::type leaf_d(leaf_dSEXP);
-    Rcpp::traits::input_parameter< double >::type kappa_prop_sd(kappa_prop_sdSEXP);
-    Rcpp::traits::input_parameter< bool >::type return_trees(return_treesSEXP);
-    Rcpp::traits::input_parameter< bool >::type save_trees(save_treesSEXP);
-    Rcpp::traits::input_parameter< bool >::type est_mod_fits(est_mod_fitsSEXP);
-    Rcpp::traits::input_parameter< bool >::type est_con_fits(est_con_fitsSEXP);
-    Rcpp::traits::input_parameter< bool >::type prior_sample(prior_sampleSEXP);
-    Rcpp::traits::input_parameter< int >::type status_interval(status_intervalSEXP);
-    Rcpp::traits::input_parameter< bool >::type text_trace(text_traceSEXP);
-    rcpp_result_gen = Rcpp::wrap(pathd_gammabcf(y_, offset_, bart_specs, bart_designs, random_des, random_var, random_var_ix, random_var_df, randeff_scales, burn, nd, thin, kappa_a, kappa_b, leaf_c, leaf_d, kappa_prop_sd, return_trees, save_trees, est_mod_fits, est_con_fits, prior_sample, status_interval, text_trace));
-    return rcpp_result_gen;
-END_RCPP
-}
-// pathe_bcfCore
-List pathe_bcfCore(arma::vec y_, arma::vec I_, arma::mat Omega_sel_con, arma::mat Omega_sel_mod, arma::mat Omega_out_con, arma::mat Omega_out_mod, arma::mat Omega_out_con_full, arma::mat Omega_out_mod_full, arma::mat Omega_sel_con_est, arma::mat Omega_sel_mod_est, arma::mat Omega_out_con_est, arma::mat Omega_out_mod_est, NumericVector x_sel_con_, NumericVector x_sel_mod_, NumericVector x_out_con_, NumericVector x_out_mod_, NumericVector x_out_con_full_, NumericVector x_out_mod_full_, NumericVector x_sel_con_est_, NumericVector x_sel_mod_est_, NumericVector x_out_con_est_, NumericVector x_out_mod_est_, List x_sel_con_info_list, List x_sel_mod_info_list, List x_out_con_info_list, List x_out_mod_info_list, int burn, int nd, int thin, int ntree_sel_con, int ntree_sel_mod, int ntree_out_con, int ntree_out_mod, double lambda, double nu, arma::mat Sigma0_sel_con, arma::mat Sigma0_sel_mod, arma::mat Sigma0_out_con, arma::mat Sigma0_out_mod, double sel_con_alpha, double sel_con_beta, double sel_mod_alpha, double sel_mod_beta, double out_con_alpha, double out_con_beta, double out_mod_alpha, double out_mod_beta, double con_scale_df, double mod_scale_df, int status_interval);
-RcppExport SEXP _countbcf_pathe_bcfCore(SEXP y_SEXP, SEXP I_SEXP, SEXP Omega_sel_conSEXP, SEXP Omega_sel_modSEXP, SEXP Omega_out_conSEXP, SEXP Omega_out_modSEXP, SEXP Omega_out_con_fullSEXP, SEXP Omega_out_mod_fullSEXP, SEXP Omega_sel_con_estSEXP, SEXP Omega_sel_mod_estSEXP, SEXP Omega_out_con_estSEXP, SEXP Omega_out_mod_estSEXP, SEXP x_sel_con_SEXP, SEXP x_sel_mod_SEXP, SEXP x_out_con_SEXP, SEXP x_out_mod_SEXP, SEXP x_out_con_full_SEXP, SEXP x_out_mod_full_SEXP, SEXP x_sel_con_est_SEXP, SEXP x_sel_mod_est_SEXP, SEXP x_out_con_est_SEXP, SEXP x_out_mod_est_SEXP, SEXP x_sel_con_info_listSEXP, SEXP x_sel_mod_info_listSEXP, SEXP x_out_con_info_listSEXP, SEXP x_out_mod_info_listSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP ntree_sel_conSEXP, SEXP ntree_sel_modSEXP, SEXP ntree_out_conSEXP, SEXP ntree_out_modSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP Sigma0_sel_conSEXP, SEXP Sigma0_sel_modSEXP, SEXP Sigma0_out_conSEXP, SEXP Sigma0_out_modSEXP, SEXP sel_con_alphaSEXP, SEXP sel_con_betaSEXP, SEXP sel_mod_alphaSEXP, SEXP sel_mod_betaSEXP, SEXP out_con_alphaSEXP, SEXP out_con_betaSEXP, SEXP out_mod_alphaSEXP, SEXP out_mod_betaSEXP, SEXP con_scale_dfSEXP, SEXP mod_scale_dfSEXP, SEXP status_intervalSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type y_(y_SEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type I_(I_SEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_sel_con(Omega_sel_conSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_sel_mod(Omega_sel_modSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_con(Omega_out_conSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_mod(Omega_out_modSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_con_full(Omega_out_con_fullSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_mod_full(Omega_out_mod_fullSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_sel_con_est(Omega_sel_con_estSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_sel_mod_est(Omega_sel_mod_estSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_con_est(Omega_out_con_estSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Omega_out_mod_est(Omega_out_mod_estSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_sel_con_(x_sel_con_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_sel_mod_(x_sel_mod_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_con_(x_out_con_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_mod_(x_out_mod_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_con_full_(x_out_con_full_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_mod_full_(x_out_mod_full_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_sel_con_est_(x_sel_con_est_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_sel_mod_est_(x_sel_mod_est_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_con_est_(x_out_con_est_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type x_out_mod_est_(x_out_mod_est_SEXP);
-    Rcpp::traits::input_parameter< List >::type x_sel_con_info_list(x_sel_con_info_listSEXP);
-    Rcpp::traits::input_parameter< List >::type x_sel_mod_info_list(x_sel_mod_info_listSEXP);
-    Rcpp::traits::input_parameter< List >::type x_out_con_info_list(x_out_con_info_listSEXP);
-    Rcpp::traits::input_parameter< List >::type x_out_mod_info_list(x_out_mod_info_listSEXP);
-    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< int >::type nd(ndSEXP);
-    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
-    Rcpp::traits::input_parameter< int >::type ntree_sel_con(ntree_sel_conSEXP);
-    Rcpp::traits::input_parameter< int >::type ntree_sel_mod(ntree_sel_modSEXP);
-    Rcpp::traits::input_parameter< int >::type ntree_out_con(ntree_out_conSEXP);
-    Rcpp::traits::input_parameter< int >::type ntree_out_mod(ntree_out_modSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma0_sel_con(Sigma0_sel_conSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma0_sel_mod(Sigma0_sel_modSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma0_out_con(Sigma0_out_conSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Sigma0_out_mod(Sigma0_out_modSEXP);
-    Rcpp::traits::input_parameter< double >::type sel_con_alpha(sel_con_alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type sel_con_beta(sel_con_betaSEXP);
-    Rcpp::traits::input_parameter< double >::type sel_mod_alpha(sel_mod_alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type sel_mod_beta(sel_mod_betaSEXP);
-    Rcpp::traits::input_parameter< double >::type out_con_alpha(out_con_alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type out_con_beta(out_con_betaSEXP);
-    Rcpp::traits::input_parameter< double >::type out_mod_alpha(out_mod_alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type out_mod_beta(out_mod_betaSEXP);
-    Rcpp::traits::input_parameter< double >::type con_scale_df(con_scale_dfSEXP);
-    Rcpp::traits::input_parameter< double >::type mod_scale_df(mod_scale_dfSEXP);
-    Rcpp::traits::input_parameter< int >::type status_interval(status_intervalSEXP);
-    rcpp_result_gen = Rcpp::wrap(pathe_bcfCore(y_, I_, Omega_sel_con, Omega_sel_mod, Omega_out_con, Omega_out_mod, Omega_out_con_full, Omega_out_mod_full, Omega_sel_con_est, Omega_sel_mod_est, Omega_out_con_est, Omega_out_mod_est, x_sel_con_, x_sel_mod_, x_out_con_, x_out_mod_, x_out_con_full_, x_out_mod_full_, x_sel_con_est_, x_sel_mod_est_, x_out_con_est_, x_out_mod_est_, x_sel_con_info_list, x_sel_mod_info_list, x_out_con_info_list, x_out_mod_info_list, burn, nd, thin, ntree_sel_con, ntree_sel_mod, ntree_out_con, ntree_out_mod, lambda, nu, Sigma0_sel_con, Sigma0_sel_mod, Sigma0_out_con, Sigma0_out_mod, sel_con_alpha, sel_con_beta, sel_mod_alpha, sel_mod_beta, out_con_alpha, out_con_beta, out_mod_alpha, out_mod_beta, con_scale_df, mod_scale_df, status_interval));
-    return rcpp_result_gen;
-END_RCPP
-}
 // unflatten_test
 void unflatten_test(Rcpp::List flat_tree);
-RcppExport SEXP _countbcf_unflatten_test(SEXP flat_treeSEXP) {
+RcppExport SEXP _zicbcf_unflatten_test(SEXP flat_treeSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type flat_tree(flat_treeSEXP);
@@ -477,7 +104,7 @@ END_RCPP
 }
 // unflatten_test_predict
 void unflatten_test_predict(Rcpp::List flat_tree, List x_info_list);
-RcppExport SEXP _countbcf_unflatten_test_predict(SEXP flat_treeSEXP, SEXP x_info_listSEXP) {
+RcppExport SEXP _zicbcf_unflatten_test_predict(SEXP flat_treeSEXP, SEXP x_info_listSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type flat_tree(flat_treeSEXP);
@@ -486,9 +113,9 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// zicbcfCore_pathA
-List zicbcfCore_pathA(arma::vec y_hurdle, arma::mat Omega_con_hurdle, arma::mat Omega_mod_hurdle, NumericVector x_con_hurdle_, NumericVector x_mod_hurdle_, List x_con_info_hurdle_list, List x_mod_info_hurdle_list, int ntree_con_hurdle, int ntree_mod_hurdle, arma::mat Sigma0_con_hurdle, arma::mat Sigma0_mod_hurdle, double con_alpha_hurdle, double con_beta_hurdle, double mod_alpha_hurdle, double mod_beta_hurdle, bool vanilla_hurdle, bool use_con_scale_hurdle, bool use_mod_scale_hurdle, double con_scale_df_hurdle, double mod_scale_df_hurdle, arma::vec y_continuous, arma::mat Omega_con_continuous, arma::mat Omega_mod_continuous, NumericVector x_con_continuous_, NumericVector x_mod_continuous_, List x_con_info_continuous_list, List x_mod_info_continuous_list, int ntree_con_continuous, int ntree_mod_continuous, arma::mat Sigma0_con_continuous, arma::mat Sigma0_mod_continuous, double con_alpha_continuous, double con_beta_continuous, double mod_alpha_continuous, double mod_beta_continuous, bool vanilla_continuous, bool use_con_scale_continuous, bool use_mod_scale_continuous, double con_scale_df_continuous, double mod_scale_df_continuous, NumericVector x_con_continuous_est_, NumericVector x_mod_continuous_est_, arma::mat Omega_con_continuous_est, arma::mat Omega_mod_continuous_est, int burn, int nd, int thin, double lambda, double nu, int status_interval);
-RcppExport SEXP _countbcf_zicbcfCore_pathA(SEXP y_hurdleSEXP, SEXP Omega_con_hurdleSEXP, SEXP Omega_mod_hurdleSEXP, SEXP x_con_hurdle_SEXP, SEXP x_mod_hurdle_SEXP, SEXP x_con_info_hurdle_listSEXP, SEXP x_mod_info_hurdle_listSEXP, SEXP ntree_con_hurdleSEXP, SEXP ntree_mod_hurdleSEXP, SEXP Sigma0_con_hurdleSEXP, SEXP Sigma0_mod_hurdleSEXP, SEXP con_alpha_hurdleSEXP, SEXP con_beta_hurdleSEXP, SEXP mod_alpha_hurdleSEXP, SEXP mod_beta_hurdleSEXP, SEXP vanilla_hurdleSEXP, SEXP use_con_scale_hurdleSEXP, SEXP use_mod_scale_hurdleSEXP, SEXP con_scale_df_hurdleSEXP, SEXP mod_scale_df_hurdleSEXP, SEXP y_continuousSEXP, SEXP Omega_con_continuousSEXP, SEXP Omega_mod_continuousSEXP, SEXP x_con_continuous_SEXP, SEXP x_mod_continuous_SEXP, SEXP x_con_info_continuous_listSEXP, SEXP x_mod_info_continuous_listSEXP, SEXP ntree_con_continuousSEXP, SEXP ntree_mod_continuousSEXP, SEXP Sigma0_con_continuousSEXP, SEXP Sigma0_mod_continuousSEXP, SEXP con_alpha_continuousSEXP, SEXP con_beta_continuousSEXP, SEXP mod_alpha_continuousSEXP, SEXP mod_beta_continuousSEXP, SEXP vanilla_continuousSEXP, SEXP use_con_scale_continuousSEXP, SEXP use_mod_scale_continuousSEXP, SEXP con_scale_df_continuousSEXP, SEXP mod_scale_df_continuousSEXP, SEXP x_con_continuous_est_SEXP, SEXP x_mod_continuous_est_SEXP, SEXP Omega_con_continuous_estSEXP, SEXP Omega_mod_continuous_estSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP status_intervalSEXP) {
+// zicbcfCore
+List zicbcfCore(arma::vec y_hurdle, arma::mat Omega_con_hurdle, arma::mat Omega_mod_hurdle, NumericVector x_con_hurdle_, NumericVector x_mod_hurdle_, List x_con_info_hurdle_list, List x_mod_info_hurdle_list, int ntree_con_hurdle, int ntree_mod_hurdle, arma::mat Sigma0_con_hurdle, arma::mat Sigma0_mod_hurdle, double con_alpha_hurdle, double con_beta_hurdle, double mod_alpha_hurdle, double mod_beta_hurdle, bool vanilla_hurdle, bool use_con_scale_hurdle, bool use_mod_scale_hurdle, double con_scale_df_hurdle, double mod_scale_df_hurdle, arma::vec y_continuous, arma::mat Omega_con_continuous, arma::mat Omega_mod_continuous, NumericVector x_con_continuous_, NumericVector x_mod_continuous_, List x_con_info_continuous_list, List x_mod_info_continuous_list, int ntree_con_continuous, int ntree_mod_continuous, arma::mat Sigma0_con_continuous, arma::mat Sigma0_mod_continuous, double con_alpha_continuous, double con_beta_continuous, double mod_alpha_continuous, double mod_beta_continuous, bool vanilla_continuous, bool use_con_scale_continuous, bool use_mod_scale_continuous, double con_scale_df_continuous, double mod_scale_df_continuous, NumericVector x_con_continuous_est_, NumericVector x_mod_continuous_est_, arma::mat Omega_con_continuous_est, arma::mat Omega_mod_continuous_est, int burn, int nd, int thin, double lambda, double nu, int status_interval);
+RcppExport SEXP _zicbcf_zicbcfCore(SEXP y_hurdleSEXP, SEXP Omega_con_hurdleSEXP, SEXP Omega_mod_hurdleSEXP, SEXP x_con_hurdle_SEXP, SEXP x_mod_hurdle_SEXP, SEXP x_con_info_hurdle_listSEXP, SEXP x_mod_info_hurdle_listSEXP, SEXP ntree_con_hurdleSEXP, SEXP ntree_mod_hurdleSEXP, SEXP Sigma0_con_hurdleSEXP, SEXP Sigma0_mod_hurdleSEXP, SEXP con_alpha_hurdleSEXP, SEXP con_beta_hurdleSEXP, SEXP mod_alpha_hurdleSEXP, SEXP mod_beta_hurdleSEXP, SEXP vanilla_hurdleSEXP, SEXP use_con_scale_hurdleSEXP, SEXP use_mod_scale_hurdleSEXP, SEXP con_scale_df_hurdleSEXP, SEXP mod_scale_df_hurdleSEXP, SEXP y_continuousSEXP, SEXP Omega_con_continuousSEXP, SEXP Omega_mod_continuousSEXP, SEXP x_con_continuous_SEXP, SEXP x_mod_continuous_SEXP, SEXP x_con_info_continuous_listSEXP, SEXP x_mod_info_continuous_listSEXP, SEXP ntree_con_continuousSEXP, SEXP ntree_mod_continuousSEXP, SEXP Sigma0_con_continuousSEXP, SEXP Sigma0_mod_continuousSEXP, SEXP con_alpha_continuousSEXP, SEXP con_beta_continuousSEXP, SEXP mod_alpha_continuousSEXP, SEXP mod_beta_continuousSEXP, SEXP vanilla_continuousSEXP, SEXP use_con_scale_continuousSEXP, SEXP use_mod_scale_continuousSEXP, SEXP con_scale_df_continuousSEXP, SEXP mod_scale_df_continuousSEXP, SEXP x_con_continuous_est_SEXP, SEXP x_mod_continuous_est_SEXP, SEXP Omega_con_continuous_estSEXP, SEXP Omega_mod_continuous_estSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP status_intervalSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -542,7 +169,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
     Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
     Rcpp::traits::input_parameter< int >::type status_interval(status_intervalSEXP);
-    rcpp_result_gen = Rcpp::wrap(zicbcfCore_pathA(y_hurdle, Omega_con_hurdle, Omega_mod_hurdle, x_con_hurdle_, x_mod_hurdle_, x_con_info_hurdle_list, x_mod_info_hurdle_list, ntree_con_hurdle, ntree_mod_hurdle, Sigma0_con_hurdle, Sigma0_mod_hurdle, con_alpha_hurdle, con_beta_hurdle, mod_alpha_hurdle, mod_beta_hurdle, vanilla_hurdle, use_con_scale_hurdle, use_mod_scale_hurdle, con_scale_df_hurdle, mod_scale_df_hurdle, y_continuous, Omega_con_continuous, Omega_mod_continuous, x_con_continuous_, x_mod_continuous_, x_con_info_continuous_list, x_mod_info_continuous_list, ntree_con_continuous, ntree_mod_continuous, Sigma0_con_continuous, Sigma0_mod_continuous, con_alpha_continuous, con_beta_continuous, mod_alpha_continuous, mod_beta_continuous, vanilla_continuous, use_con_scale_continuous, use_mod_scale_continuous, con_scale_df_continuous, mod_scale_df_continuous, x_con_continuous_est_, x_mod_continuous_est_, Omega_con_continuous_est, Omega_mod_continuous_est, burn, nd, thin, lambda, nu, status_interval));
+    rcpp_result_gen = Rcpp::wrap(zicbcfCore(y_hurdle, Omega_con_hurdle, Omega_mod_hurdle, x_con_hurdle_, x_mod_hurdle_, x_con_info_hurdle_list, x_mod_info_hurdle_list, ntree_con_hurdle, ntree_mod_hurdle, Sigma0_con_hurdle, Sigma0_mod_hurdle, con_alpha_hurdle, con_beta_hurdle, mod_alpha_hurdle, mod_beta_hurdle, vanilla_hurdle, use_con_scale_hurdle, use_mod_scale_hurdle, con_scale_df_hurdle, mod_scale_df_hurdle, y_continuous, Omega_con_continuous, Omega_mod_continuous, x_con_continuous_, x_mod_continuous_, x_con_info_continuous_list, x_mod_info_continuous_list, ntree_con_continuous, ntree_mod_continuous, Sigma0_con_continuous, Sigma0_mod_continuous, con_alpha_continuous, con_beta_continuous, mod_alpha_continuous, mod_beta_continuous, vanilla_continuous, use_con_scale_continuous, use_mod_scale_continuous, con_scale_df_continuous, mod_scale_df_continuous, x_con_continuous_est_, x_mod_continuous_est_, Omega_con_continuous_est, Omega_mod_continuous_est, burn, nd, thin, lambda, nu, status_interval));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -550,25 +177,17 @@ END_RCPP
 RcppExport SEXP _rcpp_module_boot_tree_samples();
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_countbcf_bcfCore", (DL_FUNC) &_countbcf_bcfCore, 45},
-    {"_countbcf_countbart", (DL_FUNC) &_countbcf_countbart, 33},
-    {"_countbcf_countbcf", (DL_FUNC) &_countbcf_countbcf, 33},
-    {"_countbcf_countbcf_pathb", (DL_FUNC) &_countbcf_countbcf_pathb, 33},
-    {"_countbcf_rgig", (DL_FUNC) &_countbcf_rgig, 3},
-    {"_countbcf_gig_norm", (DL_FUNC) &_countbcf_gig_norm, 3},
-    {"_countbcf_multibart", (DL_FUNC) &_countbcf_multibart, 24},
-    {"_countbcf_pathc_bcfCore", (DL_FUNC) &_countbcf_pathc_bcfCore, 46},
-    {"_countbcf_pathca_bcfCore", (DL_FUNC) &_countbcf_pathca_bcfCore, 50},
-    {"_countbcf_pathd_gammabcf", (DL_FUNC) &_countbcf_pathd_gammabcf, 24},
-    {"_countbcf_pathe_bcfCore", (DL_FUNC) &_countbcf_pathe_bcfCore, 50},
-    {"_countbcf_unflatten_test", (DL_FUNC) &_countbcf_unflatten_test, 1},
-    {"_countbcf_unflatten_test_predict", (DL_FUNC) &_countbcf_unflatten_test_predict, 2},
-    {"_countbcf_zicbcfCore_pathA", (DL_FUNC) &_countbcf_zicbcfCore_pathA, 50},
+    {"_zicbcf_bcfCore", (DL_FUNC) &_zicbcf_bcfCore, 45},
+    {"_zicbcf_rgig", (DL_FUNC) &_zicbcf_rgig, 3},
+    {"_zicbcf_gig_norm", (DL_FUNC) &_zicbcf_gig_norm, 3},
+    {"_zicbcf_unflatten_test", (DL_FUNC) &_zicbcf_unflatten_test, 1},
+    {"_zicbcf_unflatten_test_predict", (DL_FUNC) &_zicbcf_unflatten_test_predict, 2},
+    {"_zicbcf_zicbcfCore", (DL_FUNC) &_zicbcf_zicbcfCore, 50},
     {"_rcpp_module_boot_tree_samples", (DL_FUNC) &_rcpp_module_boot_tree_samples, 0},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_countbcf(DllInfo *dll) {
+RcppExport void R_init_zicbcf(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }
