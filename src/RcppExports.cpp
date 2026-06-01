@@ -92,6 +92,40 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// multibart
+List multibart(arma::vec y_, List bart_specs, List bart_designs, arma::mat random_des, arma::mat random_var, arma::mat random_var_ix, double random_var_df, arma::vec randeff_scales, int burn, int nd, int thin, double lambda, double nu, bool return_trees, bool save_trees, bool est_mod_fits, bool est_con_fits, bool prior_sample, int status_interval, NumericVector lower_bd, NumericVector upper_bd, bool probit, bool text_trace, bool R_trace);
+RcppExport SEXP _zicbcf_multibart(SEXP y_SEXP, SEXP bart_specsSEXP, SEXP bart_designsSEXP, SEXP random_desSEXP, SEXP random_varSEXP, SEXP random_var_ixSEXP, SEXP random_var_dfSEXP, SEXP randeff_scalesSEXP, SEXP burnSEXP, SEXP ndSEXP, SEXP thinSEXP, SEXP lambdaSEXP, SEXP nuSEXP, SEXP return_treesSEXP, SEXP save_treesSEXP, SEXP est_mod_fitsSEXP, SEXP est_con_fitsSEXP, SEXP prior_sampleSEXP, SEXP status_intervalSEXP, SEXP lower_bdSEXP, SEXP upper_bdSEXP, SEXP probitSEXP, SEXP text_traceSEXP, SEXP R_traceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type y_(y_SEXP);
+    Rcpp::traits::input_parameter< List >::type bart_specs(bart_specsSEXP);
+    Rcpp::traits::input_parameter< List >::type bart_designs(bart_designsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type random_des(random_desSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type random_var(random_varSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type random_var_ix(random_var_ixSEXP);
+    Rcpp::traits::input_parameter< double >::type random_var_df(random_var_dfSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type randeff_scales(randeff_scalesSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< int >::type nd(ndSEXP);
+    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type nu(nuSEXP);
+    Rcpp::traits::input_parameter< bool >::type return_trees(return_treesSEXP);
+    Rcpp::traits::input_parameter< bool >::type save_trees(save_treesSEXP);
+    Rcpp::traits::input_parameter< bool >::type est_mod_fits(est_mod_fitsSEXP);
+    Rcpp::traits::input_parameter< bool >::type est_con_fits(est_con_fitsSEXP);
+    Rcpp::traits::input_parameter< bool >::type prior_sample(prior_sampleSEXP);
+    Rcpp::traits::input_parameter< int >::type status_interval(status_intervalSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lower_bd(lower_bdSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type upper_bd(upper_bdSEXP);
+    Rcpp::traits::input_parameter< bool >::type probit(probitSEXP);
+    Rcpp::traits::input_parameter< bool >::type text_trace(text_traceSEXP);
+    Rcpp::traits::input_parameter< bool >::type R_trace(R_traceSEXP);
+    rcpp_result_gen = Rcpp::wrap(multibart(y_, bart_specs, bart_designs, random_des, random_var, random_var_ix, random_var_df, randeff_scales, burn, nd, thin, lambda, nu, return_trees, save_trees, est_mod_fits, est_con_fits, prior_sample, status_interval, lower_bd, upper_bd, probit, text_trace, R_trace));
+    return rcpp_result_gen;
+END_RCPP
+}
 // unflatten_test
 void unflatten_test(Rcpp::List flat_tree);
 RcppExport SEXP _zicbcf_unflatten_test(SEXP flat_treeSEXP) {
@@ -180,6 +214,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_zicbcf_bcfCore", (DL_FUNC) &_zicbcf_bcfCore, 45},
     {"_zicbcf_rgig", (DL_FUNC) &_zicbcf_rgig, 3},
     {"_zicbcf_gig_norm", (DL_FUNC) &_zicbcf_gig_norm, 3},
+    {"_zicbcf_multibart", (DL_FUNC) &_zicbcf_multibart, 24},
     {"_zicbcf_unflatten_test", (DL_FUNC) &_zicbcf_unflatten_test, 1},
     {"_zicbcf_unflatten_test_predict", (DL_FUNC) &_zicbcf_unflatten_test_predict, 2},
     {"_zicbcf_zicbcfCore", (DL_FUNC) &_zicbcf_zicbcfCore, 50},

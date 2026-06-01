@@ -13,6 +13,10 @@ gig_norm <- function(lambda, chi, psi) {
     .Call(`_zicbcf_gig_norm`, lambda, chi, psi)
 }
 
+multibart <- function(y_, bart_specs, bart_designs, random_des, random_var, random_var_ix, random_var_df, randeff_scales, burn, nd, thin, lambda, nu, return_trees = TRUE, save_trees = FALSE, est_mod_fits = FALSE, est_con_fits = FALSE, prior_sample = FALSE, status_interval = 100L, lower_bd = as.numeric( c(0.0)), upper_bd = as.numeric( c(0.0)), probit = FALSE, text_trace = TRUE, R_trace = FALSE) {
+    .Call(`_zicbcf_multibart`, y_, bart_specs, bart_designs, random_des, random_var, random_var_ix, random_var_df, randeff_scales, burn, nd, thin, lambda, nu, return_trees, save_trees, est_mod_fits, est_con_fits, prior_sample, status_interval, lower_bd, upper_bd, probit, text_trace, R_trace)
+}
+
 unflatten_test <- function(flat_tree) {
     invisible(.Call(`_zicbcf_unflatten_test`, flat_tree))
 }
