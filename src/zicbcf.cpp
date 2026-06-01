@@ -15,7 +15,7 @@
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-List zicbcfCore_pathA(
+List zicbcfCore(
     arma::vec y_hurdle, arma::mat Omega_con_hurdle, arma::mat Omega_mod_hurdle,
     NumericVector x_con_hurdle_, NumericVector x_mod_hurdle_,
     List x_con_info_hurdle_list, List x_mod_info_hurdle_list,
