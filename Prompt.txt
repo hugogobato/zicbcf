@@ -27,3 +27,22 @@ Have a look at the results found in @simulation_studies and then try to improve 
   it is very important that you just test it and not all the other models again. Just use the same
   random seed and test the new version of the model. Also do not delete past results, just add this
   new model as "Path D updated" or something like that
+
+
+Something I do not understand, for DGP C, the CATE RMSE is much better for Path A while the CATE Abs bias is much better for Path C updated. I thought these metrics should walk together. Why is that the case? Have a look at    and devise a model/path that could maintain the nice performance of Path C updated while having a lower CATE RMSE for DGP C  
+
+
+Something I do not understand, for DGP C, the CATE RMSE is much better for Path A while the CATE
+  Abs bias is much better for Path C updated. I thought these metrics should walk together. Why
+  is that the case? Have a look at @simulation_studies/walkthrough.md and
+  @ZIC_BCF_Research_Proposal.md and @Paths_Doc/Path_A/walkthrough.md and
+  @Paths_Doc/Path_C/walkthrough.md  and devise a plan in .md for a model/path that could maintain the nice
+  performance of Path C updated while having a lower CATE RMSE for DGP C. Name it Best_Path_Claude.md
+
+
+
+
+
+Two things I want you to explore given the current results of @simulation_studies/walkthrough.md and sensitivity analysis @simulation_studies/results/sensitivity_analysis_results.csv . Namely, I want to redo the walkthrough.md experiments, but now like do only for BCF-Linear, ZIC-BCF and ZIC-BCF-Smear. This time I want to add new evaluation metrics such as Confidence Interval length, ATE and CATE for the probability of it not being zero (but does this make sense?), and any other metric. Also, now I want to run 5 seeds for each DGP to have the mean of the metrics and standard deviation (besides for ATE RMSE, since we will only have a number for it). Also, I want to run another sensitivity analysis with the treatment effect magnitude as the varying factor since seeing the results of @simulation_studies/results/sensitivity_analysis_results.csv I suspect that the BCF-Linear is having better results for Normalized ATE abs bias thanks to its prior towards 0 treatment effect and as we increase zero-inflation degree and maintain treatment effect magnitude, the ATE approaches 0. The raw results and a .md containing the results and analysis should be put in a new folder inside
+
+

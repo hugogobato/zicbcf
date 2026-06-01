@@ -1,12 +1,11 @@
 ################################################################################
-##  Retesting Path C Updated: Improved Joint Copula-BCF
+##  Retesting Path E (Improved Selection Model with Active Outcome Fit)
 ##
-##  This script evaluates the improved Joint Copula-BCF model ("Path C updated")
-##  using the exact same random seed (42) and data-generating processes (DGPs)
-##  as the original study.
+##  This script evaluates:
+##    - "Path E": Collapsed Joint Copula-BCF (active-subset outcome forest)
 ##
-##  It reads the existing CSV results, appends the new column "Path_C_updated",
-##  and saves them back.
+##  Using seed (42) and the exact same data-generating processes (DGPs).
+##  Appends results to full_simulation_results.csv and dgpc_nburn2000_results.csv.
 ################################################################################
 
 library(countbcf, lib.loc = "local_lib")
@@ -108,106 +107,97 @@ dgp_a <- generate_dgp_lognormal()
 dgp_b <- generate_dgp_gaussian()
 dgp_c <- generate_dgp_tweedie()
 
-## ---- Evaluation Function ----------------------------------------------------
-run_pathc_updated <- function(dgp, nburn) {
-  cat(sprintf("\n--- Evaluating DGP: %s with nburn = %d ---\n", dgp$name, nburn))
+## ---- Evaluation Function: Path E --------------------------------------------
+run_pathe <- function(dgp, nburn) {
+  cat(sprintf("\n--- Fitting Path E | DGP: %s (nburn = %d) ---\n", dgp$name, nburn))
   
-  fit_pathC <- pathc_bcf(
+  fit_pathE <- pathe_bcf(
       y          = dgp$y,
       z          = Z,
       x_control  = X,
       pihat_sel  = pi_x,
-      pihat_out  = NULL, # Defaults to pihat_sel now
       nburn      = nburn,
       nsim       = NSIM,
       nthin      = NTHIN,
       update_interval = 500
   )
   
-  # Correct CATE re-transformation using unmodulated treatment effects sel_tau_post and out_tau_post
-  cate_draws_pathC <- matrix(0, nrow = NSIM, ncol = N)
+  cate_draws <- matrix(0, nrow = NSIM, ncol = N)
   for (s in 1:NSIM) {
-    eta_b0 <- fit_pathC$sel_con_post[s, ]
-    eta_b1 <- fit_pathC$sel_con_post[s, ] + fit_pathC$sel_tau_post[s, ]
+    eta_b0 <- fit_pathE$sel_con_post[s, ]
+    eta_b1 <- fit_pathE$sel_con_post[s, ] + fit_pathE$sel_tau_post[s, ]
     
-    eta_c0 <- fit_pathC$out_con_post[s, ]
-    eta_c1 <- fit_pathC$out_con_post[s, ] + fit_pathC$out_tau_post[s, ]
+    eta_c0 <- fit_pathE$out_con_post[s, ]
+    eta_c1 <- fit_pathE$out_con_post[s, ] + fit_pathE$out_tau_post[s, ]
     
-    sig2 <- fit_pathC$sigma_post[s]^2
-    bet <- fit_pathC$beta_post[s]
+    sig2 <- fit_pathE$sigma_post[s]^2
+    bet <- fit_pathE$beta_post[s]
     
     mu0_draw <- exp(eta_c0 + 0.5 * sig2) * pnorm(eta_b0 + bet)
     mu1_draw <- exp(eta_c1 + 0.5 * sig2) * pnorm(eta_b1 + bet)
     
-    cate_draws_pathC[s, ] <- mu1_draw - mu0_draw
+    cate_draws[s, ] <- mu1_draw - mu0_draw
   }
-  ate_draws_pathC <- rowMeans(cate_draws_pathC)
+  ate_draws <- rowMeans(cate_draws)
+  cate_est  <- colMeans(cate_draws)
+  cate_ci   <- apply(cate_draws, 2, quantile, probs = c(0.025, 0.975))
   
-  cate_est_pathC  <- colMeans(cate_draws_pathC)
-  cate_ci_pathC   <- apply(cate_draws_pathC, 2, quantile, probs = c(0.025, 0.975))
-  
-  rmse_pathC     <- sqrt(mean((cate_est_pathC - dgp$true_cate)^2))
-  bias_pathC     <- mean(cate_est_pathC - dgp$true_cate)
-  coverage_pathC <- mean(dgp$true_cate >= cate_ci_pathC[1, ] & dgp$true_cate <= cate_ci_pathC[2, ])
-  cor_pathC      <- cor(cate_est_pathC, dgp$true_cate)
+  rmse     <- sqrt(mean((cate_est - dgp$true_cate)^2))
+  bias     <- mean(cate_est - dgp$true_cate)
+  coverage <- mean(dgp$true_cate >= cate_ci[1, ] & dgp$true_cate <= cate_ci[2, ])
+  cor_val  <- cor(cate_est, dgp$true_cate)
   
   list(
-    ate_mean = mean(ate_draws_pathC),
-    ate_sd = sd(ate_draws_pathC),
-    rmse = rmse_pathC,
-    bias = abs(bias_pathC),
-    coverage = coverage_pathC,
-    correlation = cor_pathC
+    ate_mean = mean(ate_draws),
+    ate_sd = sd(ate_draws),
+    rmse = rmse,
+    bias = abs(bias),
+    coverage = coverage,
+    correlation = cor_val
   )
 }
 
 ## ---- Run the evaluations ----------------------------------------------------
-cat("\nRunning evaluations for Path C updated...\n")
-res_a <- run_pathc_updated(dgp_a, nburn = 500)
-res_b <- run_pathc_updated(dgp_b, nburn = 500)
-res_c <- run_pathc_updated(dgp_c, nburn = 500)
-
-cat("\nRunning evaluations for DGP C with nburn = 2000...\n")
-res_c_2000 <- run_pathc_updated(dgp_c, nburn = 2000)
+cat("\nRunning evaluations for Path E...\n")
+res_e_a <- run_pathe(dgp_a, nburn = 500)
+res_e_b <- run_pathe(dgp_b, nburn = 500)
+res_e_c <- run_pathe(dgp_c, nburn = 500)
+res_e_c_2000 <- run_pathe(dgp_c, nburn = 2000)
 
 ## ---- Append to full_simulation_results.csv ----------------------------------
 csv_file_full <- file.path(RESULTS_DIR, "full_simulation_results.csv")
 if (file.exists(csv_file_full)) {
   results_df <- read.csv(csv_file_full)
   
-  # Create new column vector
-  Path_C_updated <- rep(0, nrow(results_df))
-  
+  # Path E column
+  Path_E <- rep(0, nrow(results_df))
   # DGP A
-  Path_C_updated[results_df$DGP == "Log-Normal Hurdle" & results_df$Metric == "Est ATE Mean"] <- res_a$ate_mean
-  Path_C_updated[results_df$DGP == "Log-Normal Hurdle" & results_df$Metric == "Est ATE SD"]   <- res_a$ate_sd
-  Path_C_updated[results_df$DGP == "Log-Normal Hurdle" & results_df$Metric == "CATE RMSE"]    <- res_a$rmse
-  Path_C_updated[results_df$DGP == "Log-Normal Hurdle" & results_df$Metric == "CATE Abs Bias"]<- res_a$bias
-  Path_C_updated[results_df$DGP == "Log-Normal Hurdle" & results_df$Metric == "CATE 95% Coverage"] <- res_a$coverage
-  Path_C_updated[results_df$DGP == "Log-Normal Hurdle" & results_df$Metric == "CATE Correlation"]  <- res_a$correlation
-  
+  Path_E[results_df$DGP == "Log-Normal Hurdle" & results_df$Metric == "Est ATE Mean"] <- res_e_a$ate_mean
+  Path_E[results_df$DGP == "Log-Normal Hurdle" & results_df$Metric == "Est ATE SD"]   <- res_e_a$ate_sd
+  Path_E[results_df$DGP == "Log-Normal Hurdle" & results_df$Metric == "CATE RMSE"]    <- res_e_a$rmse
+  Path_E[results_df$DGP == "Log-Normal Hurdle" & results_df$Metric == "CATE Abs Bias"]<- res_e_a$bias
+  Path_E[results_df$DGP == "Log-Normal Hurdle" & results_df$Metric == "CATE 95% Coverage"] <- res_e_a$coverage
+  Path_E[results_df$DGP == "Log-Normal Hurdle" & results_df$Metric == "CATE Correlation"]  <- res_e_a$correlation
   # DGP B
-  Path_C_updated[results_df$DGP == "Gaussian Hurdle" & results_df$Metric == "Est ATE Mean"] <- res_b$ate_mean
-  Path_C_updated[results_df$DGP == "Gaussian Hurdle" & results_df$Metric == "Est ATE SD"]   <- res_b$ate_sd
-  Path_C_updated[results_df$DGP == "Gaussian Hurdle" & results_df$Metric == "CATE RMSE"]    <- res_b$rmse
-  Path_C_updated[results_df$DGP == "Gaussian Hurdle" & results_df$Metric == "CATE Abs Bias"]<- res_b$bias
-  Path_C_updated[results_df$DGP == "Gaussian Hurdle" & results_df$Metric == "CATE 95% Coverage"] <- res_b$coverage
-  Path_C_updated[results_df$DGP == "Gaussian Hurdle" & results_df$Metric == "CATE Correlation"]  <- res_b$correlation
-  
+  Path_E[results_df$DGP == "Gaussian Hurdle" & results_df$Metric == "Est ATE Mean"] <- res_e_b$ate_mean
+  Path_E[results_df$DGP == "Gaussian Hurdle" & results_df$Metric == "Est ATE SD"]   <- res_e_b$ate_sd
+  Path_E[results_df$DGP == "Gaussian Hurdle" & results_df$Metric == "CATE RMSE"]    <- res_e_b$rmse
+  Path_E[results_df$DGP == "Gaussian Hurdle" & results_df$Metric == "CATE Abs Bias"]<- res_e_b$bias
+  Path_E[results_df$DGP == "Gaussian Hurdle" & results_df$Metric == "CATE 95% Coverage"] <- res_e_b$coverage
+  Path_E[results_df$DGP == "Gaussian Hurdle" & results_df$Metric == "CATE Correlation"]  <- res_e_b$correlation
   # DGP C
-  Path_C_updated[results_df$DGP == "Tweedie Compound" & results_df$Metric == "Est ATE Mean"] <- res_c$ate_mean
-  Path_C_updated[results_df$DGP == "Tweedie Compound" & results_df$Metric == "Est ATE SD"]   <- res_c$ate_sd
-  Path_C_updated[results_df$DGP == "Tweedie Compound" & results_df$Metric == "CATE RMSE"]    <- res_c$rmse
-  Path_C_updated[results_df$DGP == "Tweedie Compound" & results_df$Metric == "CATE Abs Bias"]<- res_c$bias
-  Path_C_updated[results_df$DGP == "Tweedie Compound" & results_df$Metric == "CATE 95% Coverage"] <- res_c$coverage
-  Path_C_updated[results_df$DGP == "Tweedie Compound" & results_df$Metric == "CATE Correlation"]  <- res_c$correlation
+  Path_E[results_df$DGP == "Tweedie Compound" & results_df$Metric == "Est ATE Mean"] <- res_e_c$ate_mean
+  Path_E[results_df$DGP == "Tweedie Compound" & results_df$Metric == "Est ATE SD"]   <- res_e_c$ate_sd
+  Path_E[results_df$DGP == "Tweedie Compound" & results_df$Metric == "CATE RMSE"]    <- res_e_c$rmse
+  Path_E[results_df$DGP == "Tweedie Compound" & results_df$Metric == "CATE Abs Bias"]<- res_e_c$bias
+  Path_E[results_df$DGP == "Tweedie Compound" & results_df$Metric == "CATE 95% Coverage"] <- res_e_c$coverage
+  Path_E[results_df$DGP == "Tweedie Compound" & results_df$Metric == "CATE Correlation"]  <- res_e_c$correlation
   
-  results_df$Path_C_updated <- Path_C_updated
+  results_df$Path_E <- Path_E
+  
   write.csv(results_df, csv_file_full, row.names = FALSE)
-  cat("\n[SUCCESS] Updated full_simulation_results.csv with Path_C_updated column.\n")
+  cat("\n[SUCCESS] Updated full_simulation_results.csv with Path_E column.\n")
   print(results_df, digits = 4)
-} else {
-  cat("\n[WARNING] full_simulation_results.csv not found!\n")
 }
 
 ## ---- Append to dgpc_nburn2000_results.csv -----------------------------------
@@ -215,19 +205,17 @@ csv_file_2000 <- file.path(RESULTS_DIR, "dgpc_nburn2000_results.csv")
 if (file.exists(csv_file_2000)) {
   results_2000_df <- read.csv(csv_file_2000)
   
-  Path_C_updated <- rep(0, nrow(results_2000_df))
+  # Path E
+  Path_E <- rep(0, nrow(results_2000_df))
+  Path_E[results_2000_df$Metric == "Est ATE Mean"] <- res_e_c_2000$ate_mean
+  Path_E[results_2000_df$Metric == "Est ATE SD"]   <- res_e_c_2000$ate_sd
+  Path_E[results_2000_df$Metric == "CATE RMSE"]    <- res_e_c_2000$rmse
+  Path_E[results_2000_df$Metric == "CATE Abs Bias"]<- res_e_c_2000$bias
+  Path_E[results_2000_df$Metric == "CATE 95% Coverage"] <- res_e_c_2000$coverage
+  Path_E[results_2000_df$Metric == "CATE Correlation"]  <- res_e_c_2000$correlation
+  results_2000_df$Path_E <- Path_E
   
-  Path_C_updated[results_2000_df$Metric == "Est ATE Mean"] <- res_c_2000$ate_mean
-  Path_C_updated[results_2000_df$Metric == "Est ATE SD"]   <- res_c_2000$ate_sd
-  Path_C_updated[results_2000_df$Metric == "CATE RMSE"]    <- res_c_2000$rmse
-  Path_C_updated[results_2000_df$Metric == "CATE Abs Bias"]<- res_c_2000$bias
-  Path_C_updated[results_2000_df$Metric == "CATE 95% Coverage"] <- res_c_2000$coverage
-  Path_C_updated[results_2000_df$Metric == "CATE Correlation"]  <- res_c_2000$correlation
-  
-  results_2000_df$Path_C_updated <- Path_C_updated
   write.csv(results_2000_df, csv_file_2000, row.names = FALSE)
-  cat("\n[SUCCESS] Updated dgpc_nburn2000_results.csv with Path_C_updated column.\n")
+  cat("\n[SUCCESS] Updated dgpc_nburn2000_results.csv with Path_E column.\n")
   print(results_2000_df, digits = 4)
-} else {
-  cat("\n[WARNING] dgpc_nburn2000_results.csv not found!\n")
 }

@@ -1,0 +1,2 @@
+"Scenario_ID","DGP","k","True_ATE","Zero_Proportion","Linear_RMSE","Linear_Bias","Linear_Coverage","Linear_Correlation","Linear_Est_ATE","PathA_RMSE","PathA_Bias","PathA_Coverage","PathA_Correlation","PathA_Est_ATE","Gemini_RMSE","Gemini_Bias","Gemini_Coverage","Gemini_Correlation","Gemini_Est_ATE"
+15,"DGP C: Tweedie Compound",2,10.9658214359106,0.201,15.3964179186379,0.198285161615802,0.638,0.914232183407649,10.7675362742948,21.6313352393167,4.40960090128946,0.98,0.835972054170565,15.3754223372001,20.8727208357377,1.84079271407354,0.998,0.83991282095224,12.8066141499841

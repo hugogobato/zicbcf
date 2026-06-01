@@ -72,18 +72,16 @@ cat("Generating ggplot2 sensitivity charts with BCF-Linear normalization...\n")
 
 long_results <- all_results %>%
   pivot_longer(
-    cols = starts_with(c("Linear_", "Log_", "PathA_", "PathB_", "PathC_", "PathD_")),
+    cols = starts_with(c("Linear_", "PathA_", "PathC_", "Gemini_")),
     names_to = c("Model", "Metric"),
     names_sep = "_"
   ) %>%
   mutate(
     Model = case_when(
       Model == "Linear" ~ "BCF-Linear",
-      Model == "Log"    ~ "BCF-Log",
       Model == "PathA"  ~ "ZIC-BCF (Path A)",
-      Model == "PathB"  ~ "Tweedie BCF (Path B)",
       Model == "PathC"  ~ "Joint Copula-BCF (Path C)",
-      Model == "PathD"  ~ "Gamma Hurdle BCF (Path D)"
+      Model == "Gemini" ~ "ZIC-BCF-Smear (Best_Path_Gemini)"
     )
   )
 
@@ -107,12 +105,10 @@ raw_metrics <- long_results %>%
 plot_data <- rbind(raw_metrics, norm_metrics)
 
 premium_colors <- c(
-  "BCF-Linear"                = "#94a3b8", # Cool grey
-  "BCF-Log"                   = "#fb923c", # Warm orange
-  "ZIC-BCF (Path A)"          = "#10b981", # Emerald Green
-  "Tweedie BCF (Path B)"      = "#6366f1", # Indigo
-  "Joint Copula-BCF (Path C)" = "#f43f5e", # Rose
-  "Gamma Hurdle BCF (Path D)" = "#06b6d4"  # Cyan
+  "BCF-Linear"                      = "#94a3b8", # Cool grey
+  "ZIC-BCF (Path A)"                = "#10b981", # Emerald Green
+  "Joint Copula-BCF (Path C)"       = "#f43f5e", # Rose
+  "ZIC-BCF-Smear (Best_Path_Gemini)" = "#8b5cf6"  # Purple (Gemini)
 )
 
 plot_dgp_sensitivity <- function(dgp_name, file_name) {
