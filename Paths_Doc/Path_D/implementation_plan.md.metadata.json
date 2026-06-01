@@ -1,6 +1,0 @@
-{
-  "artifactType": "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
-  "summary": "Updated implementation plan to use specific file names for Path D (pathd_gammabcf.cpp and pathd_gammabcf.R) to avoid collision with other agents working on different paths.",
-  "updatedAt": "2026-05-23T22:36:33.704030094Z",
-  "requestFeedback": true
-}

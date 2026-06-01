@@ -23,3 +23,5 @@ src/symbols.rds
 src/*:Zone.Identifier
 *.Rcheck/
 *.tar.gz
+
+/Old_Stuff

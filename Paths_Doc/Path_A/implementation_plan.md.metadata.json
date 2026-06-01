@@ -1,6 +1,0 @@
-{
-  "artifactType": "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
-  "summary": "Updated implementation plan for Zero-Inflated Continuous BCF (ZIC-BCF) Path A using suffix _pathA for all files and functions to avoid naming conflicts with other paths.",
-  "updatedAt": "2026-05-23T22:36:13.215783028Z",
-  "requestFeedback": true
-}
