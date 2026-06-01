@@ -91,7 +91,7 @@ zicbcf_fit <- function(
   if (!all(z %in% c(0, 1))) stop("Treatment z must contain only 0 and 1")
   if (nburn < 0) stop("nburn must be non-negative")
   if (nsim < 1) stop("nsim must be positive")
-  if (thin < 1) stop("thin must be positive")
+  if (nthin < 1) stop("nthin must be positive")
   if (nburn < 100) warning("A low (<100) value for nburn was supplied")
 
   # -- active subset & SPA propensity -----------------------------------------
