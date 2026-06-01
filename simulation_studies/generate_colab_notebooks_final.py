@@ -34,7 +34,7 @@ install_cell = {
     "metadata": {},
     "outputs": [],
     "source": [
-        "# Install the self-contained zicbcf package from GitHub\n",
+        "# Install devtools and the zicbcf package from GitHub\n",
         "install.packages(\"remotes\", repos=\"https://cloud.r-project.org/\")\n",
         "if (!require(\"devtools\")) {\n",
         "  install.packages(\"devtools\", repos=\"https://cloud.r-project.org/\")\n",
@@ -244,6 +244,20 @@ for (s in 1:N_SIM) {{
     Smear_CATE_Correlation  = NA,
     Smear_CATE_CI_Length    = NA,
     Smear_Est_ATE           = NA,
+    
+    Linear_Hurdle_RMSE        = NA,
+    Linear_Hurdle_Abs_Bias    = NA,
+    Linear_Hurdle_Coverage    = NA,
+    Linear_Hurdle_Correlation = NA,
+    Linear_Hurdle_CI_Length   = NA,
+    Linear_Est_Hurdle_ATE     = NA,
+    
+    Smear_Hurdle_RMSE        = NA,
+    Smear_Hurdle_Abs_Bias    = NA,
+    Smear_Hurdle_Coverage    = NA,
+    Smear_Hurdle_Correlation = NA,
+    Smear_Hurdle_CI_Length   = NA,
+    Smear_Est_Hurdle_ATE     = NA,
     stringsAsFactors = FALSE
   )
   
@@ -268,7 +282,14 @@ for (s in 1:N_SIM) {{
   )
   
   m <- calc_cate_metrics(fit$cate, d$true_cate, fit$ate)
-
+  
+  # Probit Hurdle stage draws
+  p0_draws <- pnorm(fit$mu_b)
+  p1_draws <- pnorm(fit$mu_b + fit$tau_b)
+  hurdle_cate_draws <- p1_draws - p0_draws
+  hurdle_ate_draws  <- rowMeans(hurdle_cate_draws)
+  m_hurdle <- calc_cate_metrics(hurdle_cate_draws, d$true_hurdle_cate, hurdle_ate_draws)
+  
   df_res <- data.frame(
     DGP = "{dgp['name']}",
     Seed = s,
@@ -288,6 +309,20 @@ for (s in 1:N_SIM) {{
     Smear_CATE_Correlation = m$correlation,
     Smear_CATE_CI_Length   = m$ci_length,
     Smear_Est_ATE          = m$est_ate_mean,
+    
+    Linear_Hurdle_RMSE        = NA,
+    Linear_Hurdle_Abs_Bias    = NA,
+    Linear_Hurdle_Coverage    = NA,
+    Linear_Hurdle_Correlation = NA,
+    Linear_Hurdle_CI_Length   = NA,
+    Linear_Est_Hurdle_ATE     = NA,
+    
+    Smear_Hurdle_RMSE        = m_hurdle$rmse,
+    Smear_Hurdle_Abs_Bias    = abs(m_hurdle$bias),
+    Smear_Hurdle_Coverage    = m_hurdle$coverage,
+    Smear_Hurdle_Correlation = m_hurdle$correlation,
+    Smear_Hurdle_CI_Length   = m_hurdle$ci_length,
+    Smear_Est_Hurdle_ATE     = m_hurdle$est_ate_mean,
     stringsAsFactors = FALSE
   )
   
@@ -308,7 +343,7 @@ cat("\\n=== Finished ZIC-BCF-Smear Run ===\\n")"""
                 f"{subtitle}",
                 "- **MCMC**: NBURN = 1000, NSIM = 1000\n",
                 "- **Simulations**: 100 seeds\n",
-                "- **Output**: CSV containing CATE metrics.\n"
+                "- **Output**: CSV containing CATE and Hurdle metrics.\n"
             ]
         },
         install_cell,
@@ -387,30 +422,3 @@ for lvl, shifts in zi_levels.items():
             create_notebook(filename, cells)
 
 print("Programmatic generation complete.")
-
-# Organize the generated files into subfolders (3 files each)
-import shutil
-
-# List all files in the notebooks directory
-files = [f for f in os.listdir(notebooks_dir) if f.endswith(".ipynb") and os.path.isfile(os.path.join(notebooks_dir, f))]
-
-# Sort alphabetically to ensure triplets of dgp_a, dgp_b, dgp_c remain grouped
-files.sort()
-
-print(f"Organizing {len(files)} notebook files into folders of 3...")
-
-# Group into triplets
-for i in range(0, len(files), 3):
-    chunk = files[i:i+3]
-    folder_idx = (i // 3) + 1
-    folder_name = f"folder_{folder_idx}"
-    target_dir = os.path.join(notebooks_dir, folder_name)
-    
-    os.makedirs(target_dir, exist_ok=True)
-    for filename in chunk:
-        src = os.path.join(notebooks_dir, filename)
-        dst = os.path.join(target_dir, filename)
-        shutil.move(src, dst)
-
-print("Subfolder organization complete.")
-
