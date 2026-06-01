@@ -152,123 +152,38 @@ if (dgp_type == "DGP A: Log-Normal Hurdle") {
 cat(sprintf("\n--- [Isolated Scenario %d/15] Starting: %s, c_shift = %.1f, Zero Proportion = %.1f%% ---\n",
             scenario_id, dgp_type, c_shift, 100 * dgp$zero_prop))
 
-# ----------------------------------------------------
-# Model 1: BCF-Linear (fitting on raw Y)
-# ----------------------------------------------------
-cat("  Fitting BCF-Linear...\n")
-fit_linear <- bcf_continuous_linear(
-    y          = dgp$y,
-    z          = Z,
-    x_control  = X,
-    x_moderate = X,
-    zhat       = pi_x,
-    nburn      = NBURN,
-    nsim       = NSIM,
-    nthin      = NTHIN,
-    update_interval = 9999
-)
-cate_draws_linear <- get_forest_fit(fit_linear$moderate_fit, X)
-ate_draws_linear  <- rowMeans(cate_draws_linear)
-cate_est_linear   <- colMeans(cate_draws_linear)
-cate_ci_linear    <- apply(cate_draws_linear, 2, quantile, probs = c(0.025, 0.975))
-
-rmse_linear     <- sqrt(mean((cate_est_linear - dgp$true_cate)^2))
-bias_linear     <- mean(cate_est_linear - dgp$true_cate)
-coverage_linear <- mean(dgp$true_cate >= cate_ci_linear[1, ] & dgp$true_cate <= cate_ci_linear[2, ])
-cor_linear      <- cor(cate_est_linear, dgp$true_cate)
-
-# ----------------------------------------------------
-# Model 2: BCF-Log (fitting on log(Y+1))
-# ----------------------------------------------------
-cat("  Fitting BCF-Log...\n")
-Y_log <- log(dgp$y + 1)
-muy_log <- mean(Y_log)
-fit_log <- bcf_continuous_linear(
-    y          = Y_log,
-    z          = Z,
-    x_control  = X,
-    x_moderate = X,
-    zhat       = pi_x,
-    nburn      = NBURN,
-    nsim       = NSIM,
-    nthin      = NTHIN,
-    update_interval = 9999
-)
-mu_post_log   <- muy_log + get_forest_fit(fit_log$control_fit, X)
-tau_post_log  <- get_forest_fit(fit_log$moderate_fit, X)
-sigma_post_log <- fit_log$sigma
-
-cate_draws_log <- matrix(0, nrow = NSIM, ncol = N)
-for (s in 1:NSIM) {
-  mu0_draw <- exp(mu_post_log[s, ] + 0.5 * sigma_post_log[s]^2) - 1
-  mu1_draw <- exp(mu_post_log[s, ] + tau_post_log[s, ] + 0.5 * sigma_post_log[s]^2) - 1
-  cate_draws_log[s, ] <- mu1_draw - mu0_draw
+# ---- Load Existing Results for baseline and other paths ---------------------
+master_res_file <- file.path(RESULTS_DIR, "sensitivity_analysis_results.csv")
+if (!file.exists(master_res_file)) {
+  stop("Fatal Error: Missing master results file sensitivity_analysis_results.csv.")
 }
-ate_draws_log <- rowMeans(cate_draws_log)
-cate_est_log  <- colMeans(cate_draws_log)
-cate_ci_log   <- apply(cate_draws_log, 2, quantile, probs = c(0.025, 0.975))
+master_df <- read.csv(master_res_file, stringsAsFactors = FALSE)
+scenario_master <- master_df[scenario_id, ]
 
-rmse_log     <- sqrt(mean((cate_est_log - dgp$true_cate)^2))
-bias_log     <- mean(cate_est_log - dgp$true_cate)
-coverage_log <- mean(dgp$true_cate >= cate_ci_log[1, ] & dgp$true_cate <= cate_ci_log[2, ])
-cor_log      <- cor(cate_est_log, dgp$true_cate)
+rmse_linear     <- scenario_master$Linear_RMSE
+bias_linear     <- scenario_master$Linear_Bias
+coverage_linear <- scenario_master$Linear_Coverage
+cor_linear      <- scenario_master$Linear_Correlation
 
-# ----------------------------------------------------
-# Model 3: ZIC-BCF Path A (Two-part BCF with SPA)
-# ----------------------------------------------------
-cat("  Fitting ZIC-BCF (Path A)...\n")
-fit_pathA <- zicbcf_pathA(
-    y             = dgp$y,
-    z             = Z,
-    x_control     = X,
-    pihat         = pi_x,
-    pihat_active  = NULL,
-    nburn         = NBURN,
-    nsim          = NSIM,
-    nthin         = NTHIN,
-    update_interval = 9999
-)
-cate_draws_pathA <- fit_pathA$cate
-ate_draws_pathA  <- fit_pathA$ate
-cate_est_pathA   <- colMeans(cate_draws_pathA)
-cate_ci_pathA    <- apply(cate_draws_pathA, 2, quantile, probs = c(0.025, 0.975))
+rmse_log     <- scenario_master$Log_RMSE
+bias_log     <- scenario_master$Log_Bias
+coverage_log <- scenario_master$Log_Coverage
+cor_log      <- scenario_master$Log_Correlation
 
-rmse_pathA     <- sqrt(mean((cate_est_pathA - dgp$true_cate)^2))
-bias_pathA     <- mean(cate_est_pathA - dgp$true_cate)
-coverage_pathA <- mean(dgp$true_cate >= cate_ci_pathA[1, ] & dgp$true_cate <= cate_ci_pathA[2, ])
-cor_pathA      <- cor(cate_est_pathA, dgp$true_cate)
+rmse_pathA     <- scenario_master$PathA_RMSE
+bias_pathA     <- scenario_master$PathA_Bias
+coverage_pathA <- scenario_master$PathA_Coverage
+cor_pathA      <- scenario_master$PathA_Correlation
 
-# ----------------------------------------------------
-# Model 4: Tweedie BCF (Path B)
-# ----------------------------------------------------
-cat("  Fitting Tweedie BCF (Path B)...\n")
-fit_pathB <- countbcf_pathb(
-    y             = dgp$y,
-    z             = Z,
-    x_control     = X,
-    pihat         = pi_x,
-    nburn         = NBURN,
-    nsim          = NSIM,
-    nthin         = NTHIN,
-    update_interval = 9999
-)
-mu_f_B  <- fit_pathB$mu_f_post
-tau_f_B <- fit_pathB$tau_f_post
+rmse_pathB     <- scenario_master$PathB_RMSE
+bias_pathB     <- scenario_master$PathB_Bias
+coverage_pathB <- scenario_master$PathB_Coverage
+cor_pathB      <- scenario_master$PathB_Correlation
 
-cate_draws_pathB <- matrix(0, nrow = NSIM, ncol = N)
-for (s in 1:NSIM) {
-  mu0_draw <- exp(2.0 * mu_f_B[s, ])
-  mu1_draw <- exp(2.0 * (mu_f_B[s, ] + tau_f_B[s, ]))
-  cate_draws_pathB[s, ] <- mu1_draw - mu0_draw
-}
-ate_draws_pathB <- rowMeans(cate_draws_pathB)
-cate_est_pathB  <- colMeans(cate_draws_pathB)
-cate_ci_pathB   <- apply(cate_draws_pathB, 2, quantile, probs = c(0.025, 0.975))
-
-rmse_pathB     <- sqrt(mean((cate_est_pathB - dgp$true_cate)^2))
-bias_pathB     <- mean(cate_est_pathB - dgp$true_cate)
-coverage_pathB <- mean(dgp$true_cate >= cate_ci_pathB[1, ] & dgp$true_cate <= cate_ci_pathB[2, ])
-cor_pathB      <- cor(cate_est_pathB, dgp$true_cate)
+rmse_pathD     <- scenario_master$PathD_RMSE
+bias_pathD     <- scenario_master$PathD_Bias
+coverage_pathD <- scenario_master$PathD_Coverage
+cor_pathD      <- scenario_master$PathD_Correlation
 
 # ----------------------------------------------------
 # Model 5: Joint Copula-BCF Path C (Selection model)
@@ -288,9 +203,9 @@ fit_pathC <- pathc_bcf(
 cate_draws_pathC <- matrix(0, nrow = NSIM, ncol = N)
 for (s in 1:NSIM) {
   eta_b0 <- fit_pathC$sel_con_post[s, ]
-  eta_b1 <- fit_pathC$sel_con_post[s, ] + fit_pathC$sel_mod_post[s, ]
+  eta_b1 <- fit_pathC$sel_con_post[s, ] + fit_pathC$sel_tau_post[s, ]
   eta_c0 <- fit_pathC$out_con_post[s, ]
-  eta_c1 <- fit_pathC$out_con_post[s, ] + fit_pathC$out_mod_post[s, ]
+  eta_c1 <- fit_pathC$out_con_post[s, ] + fit_pathC$out_tau_post[s, ]
   sig2 <- fit_pathC$sigma_post[s]^2
   bet <- fit_pathC$beta_post[s]
   
@@ -308,51 +223,29 @@ coverage_pathC <- mean(dgp$true_cate >= cate_ci_pathC[1, ] & dgp$true_cate <= ca
 cor_pathC      <- cor(cate_est_pathC, dgp$true_cate)
 
 # ----------------------------------------------------
-# Model 6: Gamma Hurdle BCF (Path D)
+# Model 7: ZIC-BCF-Smear (Best_Path_Gemini)
 # ----------------------------------------------------
-cat("  Fitting Gamma Hurdle BCF (Path D)...\n")
-fit_pathD_intensity <- pathd_gammabcf(
+cat("  Fitting ZIC-BCF-Smear (Best_Path_Gemini)...\n")
+fit_smear <- zicbcf_smear(
     y             = dgp$y,
     z             = Z,
     x_control     = X,
-    pihat_pos     = NULL,
+    pihat         = pi_x,
+    pihat_active  = NULL,
     nburn         = NBURN,
     nsim          = NSIM,
-    thin          = NTHIN,
-    update_interval = 9999,
-    return_trees  = TRUE
+    nthin         = NTHIN,
+    update_interval = 9999
 )
-fit_pathD_intensity$control_fit$scale  <- 1.0
-fit_pathD_intensity$control_fit$shift  <- 0.0
-fit_pathD_intensity$moderate_fit$scale <- 1.0
-fit_pathD_intensity$moderate_fit$shift <- 0.0
+cate_draws_smear <- fit_smear$cate
+ate_draws_smear  <- fit_smear$ate
+cate_est_smear   <- colMeans(cate_draws_smear)
+cate_ci_smear    <- apply(cate_draws_smear, 2, quantile, probs = c(0.025, 0.975))
 
-mu_f_all  <- -get_forest_fit(fit_pathD_intensity$control_fit, cbind(X, pi_x))
-tau_f_all <- -get_forest_fit(fit_pathD_intensity$moderate_fit, X)
-
-# Reuse hurdle draws from Path A
-mu_b_all  <- fit_pathA$mu_b
-tau_b_all <- fit_pathA$tau_b
-
-p0_hurdle <- pnorm(mu_b_all)
-p1_hurdle <- pnorm(mu_b_all + tau_b_all)
-lambda_0_all <- exp(mu_f_all)
-lambda_1_all <- exp(mu_f_all + tau_f_all)
-
-cate_draws_pathD <- matrix(0, nrow = NSIM, ncol = N)
-for (s in 1:NSIM) {
-  mu0_draw <- p0_hurdle[s, ] * lambda_0_all[s, ]
-  mu1_draw <- p1_hurdle[s, ] * lambda_1_all[s, ]
-  cate_draws_pathD[s, ] <- mu1_draw - mu0_draw
-}
-ate_draws_pathD <- rowMeans(cate_draws_pathD)
-cate_est_pathD  <- colMeans(cate_draws_pathD)
-cate_ci_pathD   <- apply(cate_draws_pathD, 2, quantile, probs = c(0.025, 0.975))
-
-rmse_pathD     <- sqrt(mean((cate_est_pathD - dgp$true_cate)^2))
-bias_pathD     <- mean(cate_est_pathD - dgp$true_cate)
-coverage_pathD <- mean(dgp$true_cate >= cate_ci_pathD[1, ] & dgp$true_cate <= cate_ci_pathD[2, ])
-cor_pathD      <- cor(cate_est_pathD, dgp$true_cate)
+rmse_smear     <- sqrt(mean((cate_est_smear - dgp$true_cate)^2))
+bias_smear     <- mean(cate_est_smear - dgp$true_cate)
+coverage_smear <- mean(dgp$true_cate >= cate_ci_smear[1, ] & dgp$true_cate <= cate_ci_smear[2, ])
+cor_smear      <- cor(cate_est_smear, dgp$true_cate)
 
 cat(sprintf("[Scenario %d] Completed successfully!\n", scenario_id))
 
@@ -398,6 +291,12 @@ out_df <- data.frame(
   PathD_Bias = abs(bias_pathD),
   PathD_Coverage = coverage_pathD,
   PathD_Correlation = cor_pathD,
+  
+  # ZIC-BCF-Smear (Best_Path_Gemini)
+  Gemini_RMSE = rmse_smear,
+  Gemini_Bias = abs(bias_smear),
+  Gemini_Coverage = coverage_smear,
+  Gemini_Correlation = cor_smear,
   
   stringsAsFactors = FALSE
 )
