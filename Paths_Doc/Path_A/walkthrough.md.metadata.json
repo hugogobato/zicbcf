@@ -1,5 +1,0 @@
-{
-  "artifactType": "ARTIFACT_TYPE_WALKTHROUGH",
-  "summary": "Walkthrough of Zero-Inflated Continuous BCF (ZIC-BCF) Path A implementation and validation. It covers the C++ core zicbcfCore_pathA, R wrapper zicbcf_pathA, simulation script, and results.",
-  "updatedAt": "2026-05-23T22:48:29.000884791Z"
-}

@@ -1,8 +1,0 @@
-"Metric","BCF_Linear","BCF_Log"
-"Estimated ATE (Mean)","2.1463","3.0783"
-"Estimated ATE (SD)","0.3387","0.6850"
-"ATE 95% Credible Interval","[1.5108, 2.8172]","[1.9228, 4.6286]"
-"CATE RMSE","1.7261","2.2632"
-"CATE Absolute Bias","0.5032","0.4288"
-"CATE 95% Coverage Rate","87.8%","85.7%"
-"CATE correlation","0.4955","0.1185"

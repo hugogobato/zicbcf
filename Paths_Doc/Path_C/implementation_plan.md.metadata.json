@@ -1,6 +1,0 @@
-{
-  "artifactType": "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
-  "summary": "Updated implementation plan for Path C: Joint Copula-BCF with Selection on Unobservables. Explicitly incorporates Path C naming convention ('pathc_bcf.cpp', 'pathc_bcf.R') to prevent namespace clashes with other agents.",
-  "updatedAt": "2026-05-23T22:36:42.767622096Z",
-  "requestFeedback": true
-}
