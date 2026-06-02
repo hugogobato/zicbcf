@@ -5,6 +5,10 @@ bcfCore <- function(y_, Omega_con, Omega_mod, Omega_con_est, Omega_mod_est, x_co
     .Call(`_zicbcf_bcfCore`, y_, Omega_con, Omega_mod, Omega_con_est, Omega_mod_est, x_con_, x_mod_, x_con_est_, x_mod_est_, x_con_info_list, x_mod_info_list, random_des, random_var, random_var_ix, random_var_df, randeff_scales, burn, nd, thin, ntree_mod, ntree_con, lambda, nu, Sigma0_con, Sigma0_mod, con_alpha, con_beta, mod_alpha, mod_beta, treef_name_, est_mod_fits, est_con_fits, prior_sample, use_con_scale, use_mod_scale, con_scale_df, mod_scale_df, status_interval, vanilla, dart, var_sizes_con, var_sizes_mod, lower_bd, upper_bd, probit)
 }
 
+edp_clustering_c <- function(Sy, Sx, xPAR_p0, xPAR_mu, xPAR_sig, yPAR_beta, yPAR_r, yPAR_sig, alpha_omega, alpha_theta, xa, y) {
+    .Call(`_zicbcf_edp_clustering_c`, Sy, Sx, xPAR_p0, xPAR_mu, xPAR_sig, yPAR_beta, yPAR_r, yPAR_sig, alpha_omega, alpha_theta, xa, y)
+}
+
 rgig <- function(lambda, chi, psi) {
     .Call(`_zicbcf_rgig`, lambda, chi, psi)
 }

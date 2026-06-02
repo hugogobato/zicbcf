@@ -23,5 +23,5 @@ NeedsCompilation: yes
 RoxygenNote: 7.1.2
 RcppModules: tree_samples
 Encoding: UTF-8
-Imports: methods
+Imports: methods, stats, truncnorm, mvtnorm, MASS, LaplacesDemon, invgamma
 
