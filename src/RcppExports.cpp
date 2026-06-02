@@ -66,6 +66,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// edp_clustering_c
+List edp_clustering_c(IntegerVector Sy, IntegerVector Sx, NumericMatrix xPAR_p0, NumericMatrix xPAR_mu, NumericMatrix xPAR_sig, NumericMatrix yPAR_beta, NumericMatrix yPAR_r, NumericVector yPAR_sig, double alpha_omega, double alpha_theta, NumericMatrix xa, NumericVector y);
+RcppExport SEXP _zicbcf_edp_clustering_c(SEXP SySEXP, SEXP SxSEXP, SEXP xPAR_p0SEXP, SEXP xPAR_muSEXP, SEXP xPAR_sigSEXP, SEXP yPAR_betaSEXP, SEXP yPAR_rSEXP, SEXP yPAR_sigSEXP, SEXP alpha_omegaSEXP, SEXP alpha_thetaSEXP, SEXP xaSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type Sy(SySEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type Sx(SxSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type xPAR_p0(xPAR_p0SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type xPAR_mu(xPAR_muSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type xPAR_sig(xPAR_sigSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type yPAR_beta(yPAR_betaSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type yPAR_r(yPAR_rSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type yPAR_sig(yPAR_sigSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha_omega(alpha_omegaSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha_theta(alpha_thetaSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type xa(xaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(edp_clustering_c(Sy, Sx, xPAR_p0, xPAR_mu, xPAR_sig, yPAR_beta, yPAR_r, yPAR_sig, alpha_omega, alpha_theta, xa, y));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rgig
 double rgig(double lambda, double chi, double psi);
 RcppExport SEXP _zicbcf_rgig(SEXP lambdaSEXP, SEXP chiSEXP, SEXP psiSEXP) {
@@ -212,6 +234,7 @@ RcppExport SEXP _rcpp_module_boot_tree_samples();
 
 static const R_CallMethodDef CallEntries[] = {
     {"_zicbcf_bcfCore", (DL_FUNC) &_zicbcf_bcfCore, 45},
+    {"_zicbcf_edp_clustering_c", (DL_FUNC) &_zicbcf_edp_clustering_c, 12},
     {"_zicbcf_rgig", (DL_FUNC) &_zicbcf_rgig, 3},
     {"_zicbcf_gig_norm", (DL_FUNC) &_zicbcf_gig_norm, 3},
     {"_zicbcf_multibart", (DL_FUNC) &_zicbcf_multibart, 24},
