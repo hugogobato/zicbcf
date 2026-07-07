@@ -81,6 +81,27 @@ ate_estimate <- mean(ate_draws)         # Posterior mean ATE
 ate_ci <- quantile(ate_draws, c(0.025, 0.975)) # 95% Credible Interval
 ```
 
+### Hurdle (Participation) Treatment Effect
+
+Because `zicbcf_smear` is a two-part model, it also estimates the **hurdle-margin treatment effect**: the causal effect of treatment on the *probability of a positive (non-zero) outcome*, separately from the overall dollar-scale CATE. The probit hurdle stage returns the prognostic (`fit$mu_b`) and treatment-effect (`fit$tau_b`) draws on the latent probit scale (each an `nsim x n` matrix). Map them to control/treatment participation probabilities and difference them to obtain the hurdle CATE:
+
+```R
+# Participation probabilities under control (p0) and treatment (p1)
+p0_draws <- pnorm(fit$mu_b)               # nsim x n : Pr(y > 0 | z = 0)
+p1_draws <- pnorm(fit$mu_b + fit$tau_b)   # nsim x n : Pr(y > 0 | z = 1)
+
+# Hurdle-margin CATE = effect on the probability of any positive outcome
+hurdle_cate_draws <- p1_draws - p0_draws  # nsim x n matrix
+hurdle_ate_draws  <- rowMeans(hurdle_cate_draws)  # nsim vector of hurdle ATE draws
+
+# Summarize the hurdle (participation) effect
+hurdle_cate_estimates <- colMeans(hurdle_cate_draws)   # Posterior mean hurdle CATE per unit
+hurdle_ate_estimate   <- mean(hurdle_ate_draws)        # Posterior mean hurdle ATE (probability points)
+hurdle_ate_ci         <- quantile(hurdle_ate_draws, c(0.025, 0.975)) # 95% Credible Interval
+```
+
+Subgroup hurdle CATEs and between-group contrasts are obtained by averaging `hurdle_cate_draws` over the units in each subgroup *within every posterior draw*, exactly as for the dollar-scale CATE. See `applied_study/run_zicbcf_hurdle_subgroups.R` for a complete worked example on the MEPS dental-expenditure data.
+
 ---
 
 ## 4. Package Internals and C++ Engine
