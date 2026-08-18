@@ -11,6 +11,7 @@ script_file <- sub("^--file=", "", commandArgs(trailingOnly = FALSE)[grepl("^--f
 if (length(script_file) != 1L) stop("Run this script with Rscript.")
 
 data_dir <- dirname(normalizePath(script_file))
+source(file.path(data_dir, "..", "oncology_common.R"))
 out_dir <- file.path(data_dir, "analysis")
 data_file <- file.path(out_dir, "nonoverlap_calendar_day_analysis_data.csv")
 if (!file.exists(data_file)) stop("Run build_nonoverlap_calendar_day_endpoint.R first.")
@@ -23,23 +24,8 @@ if (anyNA(y) || any(y < 0) || anyNA(z) || !all(z %in% c(0L, 1L))) {
   stop("Outcome must be nonnegative and treatment must be complete 0/1 coding.")
 }
 
-X <- model.matrix(
-  ~ age + b_ecogct + sex + diagtype + tumcat + hpv + dstatus,
-  data = df
-)[, -1, drop = FALSE]
-storage.mode(X) <- "double"
-
-if (anyNA(X)) stop("Design matrix contains missing values.")
-
-subgroup_labels <- list(
-  Sex = factor(df$sex, levels = c("Male", "Female")),
-  `ECOG status` = factor(df$b_ecogct, levels = c(0, 1), labels = c("ECOG 0", "ECOG 1")),
-  `Diagnosis site` = factor(df$diagtype),
-  `Tumor category` = factor(df$tumcat, levels = c("N", "Y"), labels = c("Tumor cat. N", "Tumor cat. Y")),
-  `HPV status` = factor(df$hpv, levels = c("Negative", "Positive", "Unknown")),
-  `Disease status` = factor(df$dstatus, levels = c("newly diagnosed", "recurrent")),
-  `Age group` = cut(df$age, breaks = c(-Inf, 49, 59, 69, Inf), labels = c("<50", "50-59", "60-69", "70+"))
-)
+X <- onc_design_matrix(df)
+subgroup_labels <- onc_subgroup_labels(df)
 
 posterior_summary <- function(draws) {
   ci <- quantile(draws, c(0.025, 0.975))
@@ -61,7 +47,7 @@ subgroup_table <- function(draws, model, estimand) {
     label <- subgroup_labels[[group_name]]
     for (level in levels(label)) {
       index <- which(label == level)
-      if (length(index) < 30L) next
+      if (length(index) < ONC_MIN_SUBGROUP_N) next
       rows[[length(rows) + 1L]] <- data.frame(
         Model = model, Estimand = estimand, Covariate = group_name, Level = level,
         N = length(index), t(posterior_summary(rowMeans(draws[, index, drop = FALSE]))),
@@ -76,7 +62,7 @@ contrast_table <- function(draws, model, estimand) {
   rows <- list()
   for (group_name in names(subgroup_labels)) {
     label <- subgroup_labels[[group_name]]
-    eligible_levels <- levels(label)[table(label) >= 30L]
+    eligible_levels <- levels(label)[table(label) >= ONC_MIN_SUBGROUP_N]
     if (length(eligible_levels) < 2L) next
     comparisons <- combn(eligible_levels, 2L)
     for (column in seq_len(ncol(comparisons))) {
@@ -97,29 +83,58 @@ contrast_table <- function(draws, model, estimand) {
 cat(sprintf("Fitting models on %d patients, with %d zeros (%.1f%%).\n",
             nrow(df), sum(y == 0), 100 * mean(y == 0)))
 
-# ZIC-BCF uses the same covariate set and posterior settings as the original
-# record-duration analysis.  The estimated propensity is retained for the
-# matched implementation, despite randomization.
-set.seed(1)
+N_CHAINS <- 4L
+CHAIN_SEEDS <- seq_len(N_CHAINS)
+
+# ZIC-BCF uses the same covariate set and posterior settings as the
+# record-duration analysis. The estimated propensity is retained for the
+# matched implementation, despite randomization making it 0.5 by design.
 ps_model <- glm(z ~ ., data = as.data.frame(X), family = binomial())
 pihat <- predict(ps_model, type = "response")
-zic_fit <- zicbcf_smear(
-  y = y, z = z, x_control = X, x_moderate = X, pihat = pihat,
-  nburn = 2000, nsim = 4000
-)
-zic_ate_draws <- zic_fit$ate
-zic_cate_draws <- zic_fit$cate
-zic_hurdle_cate_draws <- pnorm(zic_fit$mu_b + zic_fit$tau_b) - pnorm(zic_fit$mu_b)
+zic_chains <- lapply(CHAIN_SEEDS, function(seed) {
+  set.seed(seed)
+  cat("  ZIC-BCF-Smear chain", seed, "\n")
+  zicbcf_smear(y = y, z = z, x_control = X, x_moderate = X, pihat = pihat,
+               nburn = 2000, nsim = 4000)
+})
+zic_convergence <- zicbcf_convergence(zic_chains, n_cate_units = 10L)
+zic_smearing <- zicbcf_smearing_diagnostics(zic_chains[[1L]], y = y, z = z, x = X)
+
+zic_ate_draws <- unlist(lapply(zic_chains, function(f) f$ate), use.names = FALSE)
+zic_cate_draws <- do.call(rbind, lapply(zic_chains, function(f) f$cate))
+zic_hurdle_cate_draws <- do.call(rbind, lapply(zic_chains, function(f) {
+  pnorm(f$mu_b + f$tau_b) - pnorm(f$mu_b)
+}))
 zic_hurdle_ate_draws <- rowMeans(zic_hurdle_cate_draws)
 
 # The parametric Gamma-hurdle benchmark matches the original benchmark's
-# covariates, burn-in, posterior draws, thinning, and random seed.
-set.seed(1)
-gamma_fit <- gamma_hurdle(y = y, z = z, x = X, nburn = 1000, nsim = 1000, nthin = 1)
-gamma_ate_draws <- gamma_fit$ate
-gamma_cate_draws <- gamma_fit$cate
-gamma_hurdle_cate_draws <- gamma_fit$p1 - gamma_fit$p0
+# covariates, burn-in, posterior draws, thinning, and chain configuration.
+gamma_chains <- lapply(CHAIN_SEEDS, function(seed) {
+  set.seed(seed)
+  cat("  Gamma hurdle chain", seed, "\n")
+  gamma_hurdle(y = y, z = z, x = X, nburn = 1000, nsim = 1000, nthin = 1)
+})
+gamma_convergence <- zicbcf_convergence_table(list(
+  `ATE (response scale)` = lapply(gamma_chains, function(f) f$ate),
+  `Hurdle ATE (probability)` = lapply(gamma_chains, function(f) rowMeans(f$p1 - f$p0)),
+  `Mean CATE across units` = lapply(gamma_chains, function(f) rowMeans(f$cate))
+))
+
+gamma_ate_draws <- unlist(lapply(gamma_chains, function(f) f$ate), use.names = FALSE)
+gamma_cate_draws <- do.call(rbind, lapply(gamma_chains, function(f) f$cate))
+gamma_hurdle_cate_draws <- do.call(rbind, lapply(gamma_chains, function(f) f$p1 - f$p0))
 gamma_hurdle_ate_draws <- rowMeans(gamma_hurdle_cate_draws)
+
+write_csv(bind_rows(
+  mutate(zic_convergence, Model = "ZIC-BCF-Smear"),
+  mutate(gamma_convergence, Model = "Gamma hurdle")
+), file.path(out_dir, "nonoverlap_convergence_diagnostics.csv"))
+write_csv(bind_rows(
+  mutate(zic_smearing$test, Quantity = "Breusch-Pagan on posterior-mean residuals"),
+  mutate(zic_smearing$sensitivity, Quantity = "Locally smeared sensitivity")
+), file.path(out_dir, "nonoverlap_smearing_diagnostics.csv"))
+write_csv(zic_smearing$residual_scale,
+          file.path(out_dir, "nonoverlap_smearing_residual_scale.csv"))
 
 overall_results <- bind_rows(
   data.frame(Model = "ZIC-BCF-Smear", Estimand = "Total non-overlapping severe-AE days", t(posterior_summary(zic_ate_draws))),
@@ -151,8 +166,8 @@ saveRDS(
     outcome = "Distinct on-study days with at least one grade 3+ AE",
     zic = list(ate = zic_ate_draws, cate = zic_cate_draws, hurdle_ate = zic_hurdle_ate_draws, hurdle_cate = zic_hurdle_cate_draws),
     gamma = list(ate = gamma_ate_draws, cate = gamma_cate_draws, hurdle_ate = gamma_hurdle_ate_draws, hurdle_cate = gamma_hurdle_cate_draws),
-    zic_settings = list(nburn = 2000, nsim = 4000, seed = 1),
-    gamma_settings = list(nburn = 1000, nsim = 1000, nthin = 1, seed = 1)
+    zic_settings = list(nburn = 2000, nsim = 4000, seeds = CHAIN_SEEDS),
+    gamma_settings = list(nburn = 1000, nsim = 1000, nthin = 1, seeds = CHAIN_SEEDS)
   ),
   file.path(out_dir, "nonoverlap_model_posterior_draws.rds")
 )
@@ -171,3 +186,11 @@ dev.off()
 
 cat("Analysis completed.\n")
 print(overall_results)
+cat(sprintf("ZIC-BCF-Smear: max Rhat = %.4f, min ESS = %.0f, max |Geweke z| = %.2f\n",
+            max(zic_convergence$rhat, na.rm = TRUE), min(zic_convergence$ess, na.rm = TRUE),
+            max(zic_convergence$geweke_z, na.rm = TRUE)))
+cat(sprintf("Gamma hurdle:  max Rhat = %.4f, min ESS = %.0f, max |Geweke z| = %.2f\n",
+            max(gamma_convergence$rhat, na.rm = TRUE), min(gamma_convergence$ess, na.rm = TRUE),
+            max(gamma_convergence$geweke_z, na.rm = TRUE)))
+cat(sprintf("Smearing homoskedasticity: Breusch-Pagan p = %.4f; locally smeared ATE differs by %.1f%%\n",
+            zic_smearing$test$p_value, 100 * zic_smearing$sensitivity$relative_change))

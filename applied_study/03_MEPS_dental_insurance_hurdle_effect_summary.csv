@@ -1,0 +1,3 @@
+model_part,term,estimate,conf.low,conf.high,p.value,effect_interpretation
+Logistic part: any dental expenditure,dental_insurance,1.862,1.719,2.016,1.3899999999999998e-52,Odds ratio for having any dental expenditure
+Gamma part: positive dental expenditure amount,dental_insurance,1.027,0.918,1.147,0.639,Multiplicative ratio among participants with positive dental expenditure

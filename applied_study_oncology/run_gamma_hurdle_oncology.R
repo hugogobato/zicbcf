@@ -7,10 +7,16 @@
 # the response-scale treatment effect as well as p0 and p1 for the hurdle
 # (participation) margin.
 
-set.seed(1)
 library(zicbcf)
 
 outdir <- "applied_study_oncology"
+source(file.path(outdir, "oncology_common.R"))
+
+N_CHAINS <- 4L
+N_BURN <- 1000L
+N_SIM <- 1000L
+CHAIN_SEEDS <- seq_len(N_CHAINS)
+
 data_file <- file.path(outdir, "zic_bcf_headneck_analysis_data.csv")
 if (!file.exists(data_file)) stop("Missing analysis data: ", data_file)
 
@@ -23,31 +29,39 @@ if (anyNA(y) || anyNA(z) || any(y < 0) || !all(z %in% c(0L, 1L))) {
   stop("Outcome must be nonnegative and treatment must be coded 0/1 without missing values.")
 }
 
-# Dummy encoding exactly mirrors the ZIC-BCF-Smear analysis.
-X <- model.matrix(
-  ~ age + b_ecogct + sex + diagtype + tumcat + hpv + dstatus,
-  data = df
-)[, -1, drop = FALSE]
-storage.mode(X) <- "double"
+# Dummy encoding exactly mirrors the ZIC-BCF-Smear analysis, drawn from the
+# same shared definition so that the two specifications cannot drift apart.
+X <- onc_design_matrix(df)
 
 cat(sprintf("Sample size: %d; zero outcomes: %d (%.1f%%)\n",
             nrow(df), sum(y == 0), 100 * mean(y == 0)))
 cat("Design matrix columns:", paste(colnames(X), collapse = ", "), "\n")
-cat("Fitting Gamma Hurdle benchmark...\n")
+cat(sprintf("Fitting Gamma Hurdle benchmark: %d chains of %d retained draws...\n",
+            N_CHAINS, N_SIM))
 
-# Settings match the Gamma-hurdle run in applied_study/run_gamma_hurdle.R.
-fit <- gamma_hurdle(
-  y = y,
-  z = z,
-  x = X,
-  nburn = 1000,
-  nsim = 1000,
-  nthin = 1
-)
+# Settings match the Gamma-hurdle run in applied_study/run_gamma_hurdle.R, now
+# replicated across chains so that convergence can be assessed rather than
+# assumed.
+chains <- lapply(CHAIN_SEEDS, function(seed) {
+  set.seed(seed)
+  cat("  chain", seed, "\n")
+  gamma_hurdle(y = y, z = z, x = X, nburn = N_BURN, nsim = N_SIM, nthin = 1)
+})
 
-cate_draws <- fit$cate
-ate_draws <- fit$ate
-hurdle_cate_draws <- fit$p1 - fit$p0
+convergence <- zicbcf_convergence_table(list(
+  `ATE (response scale)` = lapply(chains, function(f) f$ate),
+  `Hurdle ATE (probability)` = lapply(chains, function(f) rowMeans(f$p1 - f$p0)),
+  `Mean CATE across units` = lapply(chains, function(f) rowMeans(f$cate))
+))
+write.csv(convergence, file.path(outdir, "gamma_hurdle_convergence_diagnostics.csv"),
+          row.names = FALSE)
+cat(sprintf("  max Rhat = %.4f, min ESS = %.0f, max |Geweke z| = %.2f\n",
+            max(convergence$rhat, na.rm = TRUE), min(convergence$ess, na.rm = TRUE),
+            max(convergence$geweke_z, na.rm = TRUE)))
+
+cate_draws <- do.call(rbind, lapply(chains, function(f) f$cate))
+ate_draws <- unlist(lapply(chains, function(f) f$ate), use.names = FALSE)
+hurdle_cate_draws <- do.call(rbind, lapply(chains, function(f) f$p1 - f$p0))
 hurdle_ate_draws <- rowMeans(hurdle_cate_draws)
 
 if (ncol(cate_draws) != nrow(df) || ncol(hurdle_cate_draws) != nrow(df)) {
@@ -83,8 +97,9 @@ saveRDS(
     hurdle_ate_draws = hurdle_ate_draws,
     cate_mean = cate_mean,
     hurdle_cate_mean = hurdle_cate_mean,
-    model_settings = list(nburn = 1000, nsim = 1000, nthin = 1),
-    seed = 1
+    model_settings = list(nburn = N_BURN, nsim = N_SIM, nthin = 1,
+                          n_chains = N_CHAINS),
+    seed = CHAIN_SEEDS
   ),
   file.path(outdir, "gamma_hurdle_draws.rds")
 )

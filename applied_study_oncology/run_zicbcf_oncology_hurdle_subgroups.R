@@ -2,6 +2,7 @@
 # Run run_zicbcf_oncology.R first to create onc_hurdle_draws.rds.
 
 outdir <- "applied_study_oncology"
+source(file.path(outdir, "oncology_common.R"))
 draw_file <- file.path(outdir, "onc_hurdle_draws.rds")
 data_file <- file.path(outdir, "zic_bcf_headneck_analysis_data.csv")
 if (!file.exists(draw_file)) stop("Missing hurdle posterior draws: ", draw_file)
@@ -25,18 +26,7 @@ contrast_posterior <- function(draws_mat, idx_a, idx_b) {
     CI_high = unname(quantile(posterior, 0.975)), P_gt_0 = mean(posterior > 0))
 }
 
-sex_lab <- factor(df$sex, levels = c("Male", "Female"))
-ecog_lab <- factor(df$b_ecogct, levels = c(0, 1), labels = c("ECOG 0", "ECOG 1"))
-diag_lab <- factor(df$diagtype)
-tumcat_lab <- factor(df$tumcat, levels = c("N", "Y"), labels = c("Tumor cat. N", "Tumor cat. Y"))
-hpv_lab <- factor(df$hpv, levels = c("Negative", "Positive", "Unknown"))
-dstat_lab <- factor(df$dstatus, levels = c("newly diagnosed", "recurrent"))
-age_lab <- cut(df$age, breaks = c(-Inf, 49, 59, 69, Inf),
-               labels = c("<50", "50-59", "60-69", "70+"))
-group_vars <- list(Sex = sex_lab, `ECOG status` = ecog_lab,
-                   `Diagnosis site` = diag_lab, `Tumor category` = tumcat_lab,
-                   `HPV status` = hpv_lab, `Disease status` = dstat_lab,
-                   `Age group` = age_lab)
+group_vars <- onc_subgroup_labels(df)
 
 rows <- list(data.frame(Covariate = "Overall", Level = "All",
                         t(subgroup_posterior(hurdle_cate_draws, seq_len(nrow(df)))),
@@ -45,7 +35,7 @@ for (gname in names(group_vars)) {
   lab <- group_vars[[gname]]
   for (level in levels(lab)) {
     idx <- which(lab == level)
-    if (length(idx) < 30) next
+    if (length(idx) < ONC_MIN_SUBGROUP_N) next
     rows[[length(rows) + 1]] <- data.frame(Covariate = gname, Level = level,
                                            t(subgroup_posterior(hurdle_cate_draws, idx)),
                                            check.names = FALSE)
@@ -60,7 +50,7 @@ write.csv(subgroups, file.path(outdir, "onc_hurdle_subgroups.csv"), row.names = 
 rows <- list()
 for (gname in names(group_vars)) {
   lab <- group_vars[[gname]]
-  eligible <- levels(lab)[table(lab) >= 30]
+  eligible <- levels(lab)[table(lab) >= ONC_MIN_SUBGROUP_N]
   if (length(eligible) < 2) next
   pairs <- combn(eligible, 2)
   for (k in seq_len(ncol(pairs))) {

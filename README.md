@@ -100,7 +100,7 @@ hurdle_ate_estimate   <- mean(hurdle_ate_draws)        # Posterior mean hurdle A
 hurdle_ate_ci         <- quantile(hurdle_ate_draws, c(0.025, 0.975)) # 95% Credible Interval
 ```
 
-Subgroup hurdle CATEs and between-group contrasts are obtained by averaging `hurdle_cate_draws` over the units in each subgroup *within every posterior draw*, exactly as for the dollar-scale CATE. See `applied_study/run_zicbcf_hurdle_subgroups.R` for a complete worked example on the MEPS dental-expenditure data.
+Subgroup hurdle CATEs and between-group contrasts are obtained by averaging `hurdle_cate_draws` over the units in each subgroup *within every posterior draw*, exactly as for the dollar-scale CATE. See `applied_study/run_cate_subgroups.R` for a complete worked example on the MEPS dental-expenditure data, which reports the participation margin alongside the dollar-scale effect.
 
 ---
 

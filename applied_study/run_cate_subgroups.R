@@ -1,186 +1,273 @@
-library(zicbcf)
-
 # ==========================================================================
-# Proper CATE (subgroup) analysis for the MEPS dental-insurance study.
+# Subgroup (CATE) analysis for the MEPS dental-insurance study.
 #
-# The ZIC-BCF-Smear fit returns a full posterior of unit-level CATEs
-# (cate_draws: nsim x n). A subgroup CATE is obtained by averaging the
-# unit-level effects over the units in the subgroup *within each posterior
-# draw*, which yields a posterior distribution for the subgroup effect and
-# therefore a point estimate AND a 95% credible interval. Between-group
-# contrasts (e.g. Male - Female) are computed the same way, giving a direct
-# posterior test for treatment-effect heterogeneity.
+# Run run_study.R first; this script consumes the posterior summaries it saves
+# and performs no fitting.
+#
+# A subgroup CATE is the average of unit-level effects over the units in the
+# subgroup, taken WITHIN each posterior draw, which yields a posterior
+# distribution for the subgroup effect and therefore a point estimate and a 95%
+# credible interval. Between-group contrasts are formed the same way, so a
+# contrast inherits the posterior covariance of its two subgroups rather than
+# being read off two unrelated marginal intervals.
+#
+# TWO ESTIMANDS ARE REPORTED FOR EVERY QUANTITY.
+#
+#   Analytic-sample average. The unweighted average over the 18,763 records.
+#   This is a sample quantity over an oversampled design, not a United States
+#   population quantity.
+#
+#   Survey-weighted population target. The average weighted by PERWT23F, with a
+#   design-based variance component from the stratification (VARSTR) and
+#   clustering (VARPSU) added to the posterior variance. Only this column
+#   supports a national reading.
+#
+# The two are reported side by side because they answer different questions and
+# because the difference between them is itself informative about how far the
+# oversampled subgroups drive the sample-average result.
 # ==========================================================================
 
-set.seed(1)
+source("applied_study/meps_common.R")
 
-cat("Loading dataset...\n")
-df <- read.csv("applied_study/h251.csv")
+OUTDIR <- "applied_study"
+summary_file <- file.path(OUTDIR, "meps_zicbcf_posterior_summaries.rds")
+if (!file.exists(summary_file)) stop("Run run_study.R first.")
 
-covars <- c("AGE23X", "SEX", "RACEV2X", "FAMINC23", "POVCAT23", "REGION23", "MARRY23X")
-df_clean <- df[df$DNTINS23_M23 > 0, ]
-for (col in covars) {
-  df_clean <- df_clean[df_clean[[col]] >= 0, ]
-}
-df_clean <- df_clean[df_clean$DVTEXP23 >= 0, ]
-cat("Cleaned sample size:", nrow(df_clean), "\n")
+posterior <- readRDS(summary_file)
+df <- meps_load(file.path(OUTDIR, "h251.csv"))
+labels <- meps_subgroup_labels(df)
+weights <- df$PERWT23F
 
-y <- df_clean$DVTEXP23
-z <- ifelse(df_clean$DNTINS23_M23 == 1, 1, 0)   # 1 = insured, 0 = uninsured
-X <- as.matrix(df_clean[, covars])
+domain_names <- posterior$domain_names
+covariate <- vapply(posterior$domains, function(d) d$covariate, character(1))
+level <- vapply(posterior$domains, function(d) d$level, character(1))
 
-cat("Estimating Propensity Scores...\n")
-ps_model <- glm(z ~ ., data = as.data.frame(X), family = binomial())
-pihat <- predict(ps_model, type = "response")
+cat(sprintf("Posterior: %d chains, %d retained draws each, %d pooled draws.\n",
+            posterior$n_chains, posterior$n_sim, posterior$total_draws))
 
-cat("Fitting ZIC-BCF-Smear...\n")
-fit <- zicbcf_smear(
-  y = y, z = z,
-  x_control = X, x_moderate = X,
-  pihat = pihat,
-  nburn = 500, nsim = 1000
-)
-
-cate_draws <- fit$cate            # nsim x n posterior of unit-level CATE
-ate_draws  <- fit$ate
-saveRDS(cate_draws, "applied_study/cate_draws.rds")
-
-# ---- helper: subgroup posterior summary --------------------------------
-# idx: logical/integer vector selecting the units (columns) in the subgroup.
-subgroup_cate <- function(idx) {
-  sub <- cate_draws[, idx, drop = FALSE]
-  draw_means <- rowMeans(sub)              # posterior draws of the subgroup CATE
-  c(N        = ncol(sub),
-    CATE     = mean(draw_means),
-    CI_low   = unname(quantile(draw_means, 0.025)),
-    CI_high  = unname(quantile(draw_means, 0.975)),
-    P_gt_0   = mean(draw_means > 0))
-}
-
-# posterior of the difference between two subgroups (heterogeneity test)
-contrast_cate <- function(idx_a, idx_b) {
-  da <- rowMeans(cate_draws[, idx_a, drop = FALSE])
-  db <- rowMeans(cate_draws[, idx_b, drop = FALSE])
-  d  <- da - db
-  c(Diff    = mean(d),
-    CI_low  = unname(quantile(d, 0.025)),
-    CI_high = unname(quantile(d, 0.975)),
-    P_gt_0  = mean(d > 0))
+# ---------------------------------------------------------------------------
+# Subgroup tables
+# ---------------------------------------------------------------------------
+build_subgroup_table <- function(draws, design_variance, scale_label) {
+  rows <- lapply(seq_along(domain_names), function(k) {
+    unweighted <- meps_posterior_summary(draws$unweighted[, k])
+    weighted <- meps_posterior_summary(draws$weighted[, k], design_variance[k])
+    data.frame(
+      Scale = scale_label,
+      Covariate = covariate[k],
+      Level = level[k],
+      N = posterior$domain_n[k],
+      Weighted_N = posterior$domain_weighted_n[k],
+      Sample_estimate = unweighted[["Estimate"]],
+      Sample_CI_low = unweighted[["CI_low"]],
+      Sample_CI_high = unweighted[["CI_high"]],
+      Population_estimate = weighted[["Estimate"]],
+      Population_CI_low = weighted[["CI_low"]],
+      Population_CI_high = weighted[["CI_high"]],
+      Population_design_SE = weighted[["Design_SE"]],
+      Population_total_SE = weighted[["Total_SE"]],
+      Population_CI_low_design = weighted[["CI_low_design"]],
+      Population_CI_high_design = weighted[["CI_high_design"]],
+      P_gt_0 = weighted[["P_gt_0"]],
+      check.names = FALSE
+    )
+  })
+  do.call(rbind, rows)
 }
 
-# ---- build interpretable subgroup labels -------------------------------
-sex_lab <- factor(df_clean$SEX, levels = c(1, 2), labels = c("Male", "Female"))
+cate_table <- build_subgroup_table(posterior$cate, posterior$cate_design_variance,
+                                   "Dollar-scale CATE")
+hurdle_table <- build_subgroup_table(posterior$hurdle, posterior$hurdle_design_variance,
+                                     "Participation-margin CATE")
 
-race_lab <- factor(ifelse(df_clean$RACEV2X == 1, "White",
-                   ifelse(df_clean$RACEV2X == 2, "Black",
-                   ifelse(df_clean$RACEV2X == 4, "Asian", "Other/Multiple"))),
-                   levels = c("White", "Black", "Asian", "Other/Multiple"))
+write.csv(cate_table, file.path(OUTDIR, "cate_subgroups.csv"), row.names = FALSE)
+write.csv(hurdle_table, file.path(OUTDIR, "zicbcf_hurdle_subgroups.csv"), row.names = FALSE)
 
-pov_lab <- factor(df_clean$POVCAT23, levels = 1:5,
-                  labels = c("Poor", "Near-poor", "Low-income",
-                             "Middle-income", "High-income"))
+# ---------------------------------------------------------------------------
+# Pairwise contrasts within each covariate
+# ---------------------------------------------------------------------------
+build_contrast_table <- function(draws, unit_mean, scale_label) {
+  rows <- list()
+  for (group_name in setdiff(unique(covariate), "Overall")) {
+    members <- which(covariate == group_name)
+    if (length(members) < 2L) next
+    comparisons <- combn(members, 2L)
+    for (column in seq_len(ncol(comparisons))) {
+      a <- comparisons[1L, column]
+      b <- comparisons[2L, column]
+      unweighted <- draws$unweighted[, a] - draws$unweighted[, b]
+      weighted <- draws$weighted[, a] - draws$weighted[, b]
 
-region_lab <- factor(df_clean$REGION23, levels = 1:4,
-                     labels = c("Northeast", "Midwest", "South", "West"))
+      label <- labels[[group_name]]
+      domain_a <- !is.na(label) & label == level[a]
+      domain_b <- !is.na(label) & label == level[b]
+      design_variance <- meps_design_variance_contrast(
+        unit_mean, weights, df$VARSTR, df$VARPSU, domain_a, domain_b)
 
-marr_lab <- factor(ifelse(df_clean$MARRY23X == 1, "Married", "Not married"),
-                   levels = c("Married", "Not married"))
-
-age_lab <- cut(df_clean$AGE23X,
-               breaks = c(-Inf, 17, 34, 49, 64, Inf),
-               labels = c("0-17", "18-34", "35-49", "50-64", "65+"))
-
-inc_lab <- cut(df_clean$FAMINC23,
-               breaks = quantile(df_clean$FAMINC23, c(0, 1/3, 2/3, 1)),
-               labels = c("Low-income tertile", "Middle-income tertile",
-                          "High-income tertile"),
-               include.lowest = TRUE)
-
-group_vars <- list(
-  Sex            = sex_lab,
-  Race           = race_lab,
-  `Age group`    = age_lab,
-  `Poverty cat.` = pov_lab,
-  `Family income (tertile)` = inc_lab,
-  Region         = region_lab,
-  `Marital status` = marr_lab
-)
-
-# ---- overall + per-subgroup CATE table ---------------------------------
-rows <- list()
-rows[[1]] <- data.frame(Covariate = "Overall", Level = "All",
-                        t(subgroup_cate(rep(TRUE, ncol(cate_draws)))),
-                        check.names = FALSE)
-
-for (gname in names(group_vars)) {
-  lab <- group_vars[[gname]]
-  for (lv in levels(lab)) {
-    idx <- which(lab == lv)
-    if (length(idx) < 30) next          # skip tiny cells
-    rows[[length(rows) + 1]] <- data.frame(
-      Covariate = gname, Level = lv,
-      t(subgroup_cate(idx)), check.names = FALSE)
+      sample_summary <- meps_posterior_summary(unweighted)
+      population_summary <- meps_posterior_summary(weighted, design_variance)
+      rows[[length(rows) + 1L]] <- data.frame(
+        Scale = scale_label,
+        Covariate = group_name,
+        Contrast = paste(level[a], "-", level[b]),
+        Sample_estimate = sample_summary[["Estimate"]],
+        Sample_CI_low = sample_summary[["CI_low"]],
+        Sample_CI_high = sample_summary[["CI_high"]],
+        Population_estimate = population_summary[["Estimate"]],
+        Population_CI_low = population_summary[["CI_low"]],
+        Population_CI_high = population_summary[["CI_high"]],
+        Population_design_SE = population_summary[["Design_SE"]],
+        Population_CI_low_design = population_summary[["CI_low_design"]],
+        Population_CI_high_design = population_summary[["CI_high_design"]],
+        P_gt_0 = population_summary[["P_gt_0"]],
+        check.names = FALSE
+      )
+    }
   }
+  do.call(rbind, rows)
 }
-cate_table <- do.call(rbind, rows)
-rownames(cate_table) <- NULL
-cate_table[, c("CATE", "CI_low", "CI_high")] <-
-  round(cate_table[, c("CATE", "CI_low", "CI_high")], 2)
-cate_table$P_gt_0 <- round(cate_table$P_gt_0, 3)
 
-write.csv(cate_table, "applied_study/cate_subgroups.csv", row.names = FALSE)
-cat("\n=== Subgroup CATE estimates ===\n")
-print(cate_table)
+cate_contrasts <- build_contrast_table(posterior$cate, posterior$cate_unit_mean,
+                                       "Dollar-scale CATE")
+hurdle_contrasts <- build_contrast_table(posterior$hurdle, posterior$hurdle_unit_mean,
+                                         "Participation-margin CATE")
 
-# ---- pairwise heterogeneity contrasts within each covariate -------------
-crows <- list()
-for (gname in names(group_vars)) {
-  lab <- group_vars[[gname]]
-  lvs <- levels(lab)[table(lab) >= 30]
-  if (length(lvs) < 2) next
-  cmb <- combn(lvs, 2)
-  for (k in seq_len(ncol(cmb))) {
-    a <- cmb[1, k]; b <- cmb[2, k]
-    ct <- contrast_cate(which(lab == a), which(lab == b))
-    crows[[length(crows) + 1]] <- data.frame(
-      Covariate = gname, Contrast = paste(a, "-", b),
-      t(ct), check.names = FALSE)
-  }
+write.csv(cate_contrasts, file.path(OUTDIR, "cate_contrasts.csv"), row.names = FALSE)
+write.csv(hurdle_contrasts, file.path(OUTDIR, "zicbcf_hurdle_contrasts.csv"),
+          row.names = FALSE)
+
+credible <- function(table, low, high) {
+  table[table[[low]] > 0 | table[[high]] < 0, ]
 }
-contrast_table <- do.call(rbind, crows)
-rownames(contrast_table) <- NULL
-contrast_table[, c("Diff", "CI_low", "CI_high")] <-
-  round(contrast_table[, c("Diff", "CI_low", "CI_high")], 2)
-contrast_table$P_gt_0 <- round(contrast_table$P_gt_0, 3)
+cat("\n=== Dollar-scale contrasts credible on the analytic-sample average ===\n")
+print(credible(cate_contrasts, "Sample_CI_low", "Sample_CI_high")[
+  , c("Covariate", "Contrast", "Sample_estimate", "Sample_CI_low", "Sample_CI_high")],
+  row.names = FALSE, digits = 4)
+cat("\n=== Dollar-scale contrasts credible on the design-aware population target ===\n")
+print(credible(cate_contrasts, "Population_CI_low_design", "Population_CI_high_design")[
+  , c("Covariate", "Contrast", "Population_estimate", "Population_CI_low_design",
+      "Population_CI_high_design")], row.names = FALSE, digits = 4)
 
-write.csv(contrast_table, "applied_study/cate_contrasts.csv", row.names = FALSE)
-cat("\n=== Between-group CATE contrasts (heterogeneity) ===\n")
-print(contrast_table)
+# ---------------------------------------------------------------------------
+# Figures
+# ---------------------------------------------------------------------------
+XLAB <- "CATE: effect of dental insurance on annual dental expenditure ($)"
+overall <- which(domain_names == "Overall | All")
 
-# ---- plot: subgroup CATEs with 95% credible intervals -------------------
-plot_df <- cate_table[cate_table$Covariate != "Overall", ]
-plot_df$row_lab <- paste0(plot_df$Covariate, ": ", plot_df$Level)
-plot_df <- plot_df[nrow(plot_df):1, ]        # top-to-bottom order
-overall_cate <- cate_table$CATE[cate_table$Covariate == "Overall"]
+plot_forest <- function(table, file, estimate, low, high, xlab, title, overall_value) {
+  plot_df <- table[table$Covariate != "Overall", ]
+  plot_df$row_lab <- paste0(plot_df$Covariate, ": ", plot_df$Level)
+  plot_df <- plot_df[nrow(plot_df):1, ]
+  png(file, width = 1000, height = 1100)
+  par(mar = c(5, 20, 4, 2))
+  yy <- seq_len(nrow(plot_df))
+  plot(plot_df[[estimate]], yy,
+       xlim = range(c(plot_df[[low]], plot_df[[high]], 0)),
+       yaxt = "n", pch = 19, col = "steelblue", cex = 1.3,
+       xlab = xlab, ylab = "", main = title)
+  axis(2, at = yy, labels = plot_df$row_lab, las = 1, cex.axis = 0.85)
+  segments(plot_df[[low]], yy, plot_df[[high]], yy, col = "steelblue", lwd = 2)
+  abline(v = 0, lty = 2, col = "grey50")
+  abline(v = overall_value, lty = 3, col = "firebrick", lwd = 2)
+  legend("bottomright",
+         legend = c("Subgroup CATE (95% interval)", "No effect",
+                    sprintf("Overall = %.0f", overall_value)),
+         col = c("steelblue", "grey50", "firebrick"), pch = c(19, NA, NA),
+         lty = c(NA, 2, 3), lwd = c(2, 1, 2), bty = "n")
+  dev.off()
+}
 
-png("applied_study/11_MEPS_cate_subgroups.png", width = 1000, height = 1100)
-par(mar = c(5, 16, 4, 2))
-yy <- seq_len(nrow(plot_df))
-plot(plot_df$CATE, yy, xlim = range(c(plot_df$CI_low, plot_df$CI_high)),
-     yaxt = "n", pch = 19, col = "steelblue", cex = 1.3,
-     xlab = "CATE: effect of dental insurance on annual dental expenditure ($)",
-     ylab = "", main = "Subgroup CATE estimates with 95% credible intervals")
-axis(2, at = yy, labels = plot_df$row_lab, las = 1, cex.axis = 0.9)
-segments(plot_df$CI_low, yy, plot_df$CI_high, yy, col = "steelblue", lwd = 2)
-abline(v = 0, lty = 2, col = "grey50")
-abline(v = overall_cate, lty = 3, col = "firebrick", lwd = 2)
-legend("bottomright", legend = c("Subgroup CATE (95% CrI)", "No effect",
-       sprintf("Overall ATE = $%.0f", overall_cate)),
-       col = c("steelblue", "grey50", "firebrick"),
-       pch = c(19, NA, NA), lty = c(NA, 2, 3), lwd = c(2, 1, 2), bty = "n")
+plot_forest(cate_table, file.path(OUTDIR, "11_MEPS_cate_subgroups.png"),
+            "Sample_estimate", "Sample_CI_low", "Sample_CI_high", XLAB,
+            "Subgroup CATEs, analytic-sample average, with 95% credible intervals",
+            cate_table$Sample_estimate[overall])
+plot_forest(cate_table, file.path(OUTDIR, "11b_MEPS_cate_subgroups_weighted.png"),
+            "Population_estimate", "Population_CI_low_design", "Population_CI_high_design",
+            XLAB,
+            "Subgroup CATEs, survey-weighted population target, design-aware intervals",
+            cate_table$Population_estimate[overall])
+
+ate_draws <- posterior$cate$unweighted[, overall]
+weighted_ate_draws <- posterior$cate$weighted[, overall]
+png(file.path(OUTDIR, "12_MEPS_ate_posterior.png"), width = 900, height = 600)
+hist(weighted_ate_draws, breaks = 40, col = "skyblue", border = "white",
+     main = "Posterior of the survey-weighted average treatment effect",
+     xlab = XLAB)
+abline(v = mean(weighted_ate_draws), col = "firebrick", lwd = 2)
+abline(v = c(cate_table$Population_CI_low_design[overall],
+             cate_table$Population_CI_high_design[overall]),
+       col = "firebrick", lwd = 2, lty = 2)
+legend("topright",
+       legend = c(sprintf("Posterior mean = $%.0f", mean(weighted_ate_draws)),
+                  sprintf("Design-aware 95%% interval [$%.0f, $%.0f]",
+                          cate_table$Population_CI_low_design[overall],
+                          cate_table$Population_CI_high_design[overall])),
+       col = "firebrick", lwd = 2, lty = c(1, 2), bty = "n")
 dev.off()
 
-cat("\nATE:", round(mean(ate_draws), 2),
-    " 95% CI [", round(quantile(ate_draws, .025), 2), ",",
-    round(quantile(ate_draws, .975), 2), "]\n")
-cat("Completed successfully.\n")
+unit_level <- readRDS(file.path(OUTDIR, "meps_unit_level_posterior_means.rds"))
+png(file.path(OUTDIR, "13_MEPS_cate_unit_histogram.png"), width = 900, height = 600)
+hist(unit_level$cate_posterior_mean, breaks = 50, col = "skyblue", border = "white",
+     main = "Distribution of unit-level Conditional Average Treatment Effects",
+     xlab = XLAB)
+abline(v = mean(ate_draws), col = "firebrick", lwd = 2, lty = 3)
+dev.off()
+
+density_groups <- c("Race and ethnicity", "Age group")
+png(file.path(OUTDIR, "14_MEPS_cate_subgroup_densities.png"), width = 1000, height = 500)
+par(mfrow = c(1, 2), mar = c(4.5, 4, 3, 1))
+for (group_name in density_groups) {
+  members <- which(covariate == group_name)
+  densities <- lapply(members, function(k) density(posterior$cate$weighted[, k]))
+  xr <- range(sapply(densities, function(d) range(d$x)))
+  yr <- range(sapply(densities, function(d) range(d$y)))
+  cols <- hcl.colors(length(members), "Dark 3")
+  plot(NA, xlim = xr, ylim = yr, xlab = "Subgroup CATE ($)",
+       ylab = "Posterior density", main = group_name)
+  for (i in seq_along(densities)) {
+    lines(densities[[i]], col = cols[i], lwd = 2)
+    polygon(densities[[i]], col = adjustcolor(cols[i], 0.2), border = NA)
+  }
+  legend("topright", legend = level[members], col = cols, lwd = 2, bty = "n",
+         cex = 0.8)
+}
+dev.off()
+
+png(file.path(OUTDIR, "15_MEPS_cate_vs_covariates.png"), width = 1000, height = 500)
+par(mfrow = c(1, 2), mar = c(4.5, 4.5, 3, 1))
+plot(unit_level$AGE23X, unit_level$cate_posterior_mean, pch = 19,
+     col = adjustcolor("steelblue", 0.2), xlab = "Age (years)",
+     ylab = "Unit posterior-mean CATE ($)", main = "CATE versus age")
+lines(lowess(unit_level$AGE23X, unit_level$cate_posterior_mean, f = 0.4),
+      col = "firebrick", lwd = 3)
+plot(unit_level$FAMINC23, unit_level$cate_posterior_mean, pch = 19,
+     col = adjustcolor("steelblue", 0.2), xlab = "Family income ($)",
+     ylab = "Unit posterior-mean CATE ($)", main = "CATE versus family income")
+lines(lowess(unit_level$FAMINC23, unit_level$cate_posterior_mean, f = 0.4),
+      col = "firebrick", lwd = 3)
+dev.off()
+
+contrast_plot <- cate_contrasts
+contrast_plot$row_lab <- paste0(contrast_plot$Covariate, ": ", contrast_plot$Contrast)
+contrast_plot <- contrast_plot[nrow(contrast_plot):1, ]
+is_credible <- contrast_plot$Population_CI_low_design > 0 |
+  contrast_plot$Population_CI_high_design < 0
+png(file.path(OUTDIR, "16_MEPS_cate_contrasts_forest.png"), width = 1000, height = 1300)
+par(mar = c(5, 22, 4, 2))
+yy <- seq_len(nrow(contrast_plot))
+cols <- ifelse(is_credible, "firebrick", "grey50")
+plot(contrast_plot$Population_estimate, yy,
+     xlim = range(c(contrast_plot$Population_CI_low_design,
+                    contrast_plot$Population_CI_high_design, 0)),
+     yaxt = "n", pch = 19, col = cols, cex = 1.2,
+     xlab = "Between-subgroup difference in CATE ($), survey-weighted",
+     ylab = "", main = "Pairwise subgroup contrasts with design-aware 95% intervals")
+axis(2, at = yy, labels = contrast_plot$row_lab, las = 1, cex.axis = 0.7)
+segments(contrast_plot$Population_CI_low_design, yy,
+         contrast_plot$Population_CI_high_design, yy, col = cols, lwd = 2)
+abline(v = 0, lty = 2, col = "grey40")
+legend("bottomright", legend = c("Credible (interval excludes 0)", "Not credible"),
+       col = c("firebrick", "grey50"), pch = 19, bty = "n")
+dev.off()
+
+cat("\nCompleted successfully.\n")
