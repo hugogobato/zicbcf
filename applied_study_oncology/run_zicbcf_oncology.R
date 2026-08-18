@@ -1,78 +1,119 @@
 library(zicbcf)
 
 # ==========================================================================
-# Applied study (oncology): effect of adding panitumumab to chemotherapy on
-# the cumulative burden (in days) of severe (grade 3+) adverse events in the
-# HeadNe_Amgen_2007_265 head-and-neck cancer trial.
+# Applied study (oncology): effect of RANDOMIZED ASSIGNMENT to panitumumab
+# plus chemotherapy, versus chemotherapy alone, on the cumulative burden in
+# days of severe (grade 3+) adverse events, in the SPECTRUM head-and-neck
+# cancer trial.
 #
-# The outcome (cumulative_severe_ae_duration) is semicontinuous: a point mass
-# at zero (patients with no grade 3+ AE, ~24%) plus a heavily right-skewed
-# positive part (days), which is exactly the data structure ZIC-BCF targets.
+# ESTIMAND. The target is the effect of assignment on accrued severe-adverse-
+# event days under the trial's own differential treatment duration. Time on
+# treatment is a post-randomization consequence of assignment (panitumumab
+# continues as maintenance after chemotherapy stops), so it lies on the causal
+# pathway from assignment to accrued burden. It is therefore deliberately
+# absent from the adjustment set: conditioning on it would block part of the
+# effect being estimated and would condition on a post-treatment variable. The
+# consequence for interpretation is that the estimate is not a per-exposure
+# rate and not a fixed-horizon restricted mean. The descriptive exposure
+# analyses that quantify this are in
+# New_Data/run_exposure_and_missingness_diagnostics.R and
+# New_Data/run_exposure_rate_descriptive_analysis.R.
 #
-# As in the MEPS dental study, the ZIC-BCF-Smear fit returns a full posterior
-# of unit-level CATEs (cate_draws: nsim x n). A subgroup CATE is obtained by
-# averaging the unit-level effects over the units in the subgroup *within each
-# posterior draw*, which yields a posterior distribution for the subgroup
-# effect and therefore a point estimate AND a 95% credible interval.
-# Between-group contrasts are computed the same way, giving a direct posterior
-# test for treatment-effect heterogeneity.
+# The outcome is semicontinuous: a point mass at zero (patients with no
+# grade 3+ AE, about 24%) plus a heavily right-skewed positive part in days,
+# which is exactly the data structure ZIC-BCF-Smear targets.
+#
+# The trial is randomized, so the unadjusted arm difference is already
+# unbiased for the average effect in this cohort. The propensity model and the
+# baseline adjustment set are variance-reduction and precision devices, not
+# requirements for validity.
+#
+# A subgroup CATE is obtained by averaging unit-level effects over the units in
+# the subgroup *within each posterior draw*, which yields a posterior
+# distribution for the subgroup effect and therefore a point estimate and a 95%
+# credible interval. Between-group contrasts are computed the same way, so a
+# contrast inherits the posterior covariance of its two subgroups.
 # ==========================================================================
 
-set.seed(1)
 outdir <- "applied_study_oncology"
+source(file.path(outdir, "oncology_common.R"))
+
+N_CHAINS <- 4L
+N_BURN <- 2000L
+N_SIM <- 4000L
+CHAIN_SEEDS <- seq_len(N_CHAINS)
 
 cat("Loading dataset...\n")
-df <- read.csv(file.path(outdir, "zic_bcf_headneck_analysis_data.csv"),
-               stringsAsFactors = FALSE)
+data_file <- file.path(outdir, "zic_bcf_headneck_analysis_data.csv")
+if (!file.exists(data_file)) stop("Run prepare_analysis_data.R first.")
+df <- read.csv(data_file, stringsAsFactors = FALSE)
 cat("Sample size:", nrow(df), "\n")
 
-# -- outcome, treatment, covariates -----------------------------------------
-y <- df$cumulative_severe_ae_duration           # cumulative grade 3+ AE days
-z <- as.integer(df$treatment)                   # 1 = panitumumab + chemo, 0 = chemo
+y <- df$cumulative_severe_ae_duration
+z <- as.integer(df$treatment)
 
 cat("Zeros in outcome:", sum(y == 0), "/", length(y),
     sprintf("(%.1f%%)\n", 100 * mean(y == 0)))
 
-# Build a numeric design matrix (dummy-encode nominal factors; keep age and
-# ECOG numeric). age and b_ecogct are numeric; the rest are categorical.
-X <- model.matrix(
-  ~ age + b_ecogct + sex + diagtype + tumcat + hpv + dstatus,
-  data = df
-)[, -1, drop = FALSE]                           # drop intercept column
-storage.mode(X) <- "double"
+X <- onc_design_matrix(df)
 cat("Design matrix columns:", paste(colnames(X), collapse = ", "), "\n")
 
 # -- propensity score --------------------------------------------------------
-# This is a randomized trial (260/260), so the propensity is ~0.5 by design;
-# we still estimate it from covariates for consistency with the MEPS pipeline.
+# This is a randomized trial (260/260), so the propensity is 0.5 by design; it
+# is still estimated from covariates for consistency with the MEPS pipeline.
 cat("Estimating propensity scores...\n")
 ps_model <- glm(z ~ ., data = as.data.frame(X), family = binomial())
 pihat <- predict(ps_model, type = "response")
 cat("pihat range: [", round(min(pihat), 3), ",", round(max(pihat), 3), "]\n")
 
-# -- fit ZIC-BCF-Smear -------------------------------------------------------
-cat("Fitting ZIC-BCF-Smear...\n")
-fit <- zicbcf_smear(
-  y = y, z = z,
-  x_control = X, x_moderate = X,
-  pihat = pihat,
-  nburn = 2000, nsim = 4000
-)
+# -- fit ZIC-BCF-Smear, one chain per seed -----------------------------------
+cat(sprintf("Fitting ZIC-BCF-Smear: %d chains of %d retained draws...\n",
+            N_CHAINS, N_SIM))
+chains <- lapply(CHAIN_SEEDS, function(seed) {
+  set.seed(seed)
+  cat("  chain", seed, "\n")
+  zicbcf_smear(y = y, z = z, x_control = X, x_moderate = X, pihat = pihat,
+               nburn = N_BURN, nsim = N_SIM)
+})
 
-cate_draws <- fit$cate            # nsim x n posterior of unit-level CATE
-ate_draws  <- fit$ate
-saveRDS(cate_draws, file.path(outdir, "onc_cate_draws.rds"))
+# -- convergence diagnostics -------------------------------------------------
+cat("Computing convergence diagnostics...\n")
+convergence <- zicbcf_convergence(chains, n_cate_units = 10L)
+write.csv(convergence, file.path(outdir, "onc_convergence_diagnostics.csv"),
+          row.names = FALSE)
+cat(sprintf("  max Rhat = %.4f, min ESS = %.0f, max |Geweke z| = %.2f\n",
+            max(convergence$rhat, na.rm = TRUE),
+            min(convergence$ess, na.rm = TRUE),
+            max(convergence$geweke_z, na.rm = TRUE)))
 
-# Save the participation (hurdle) posterior as well.  The fitted probit
-# hurdle supplies p_0(x)=Phi(mu_b(x)) and p_1(x)=Phi(mu_b(x)+tau_b(x)); these
-# draws permit an apples-to-apples comparison with the Gamma-hurdle benchmark.
-hurdle_cate_draws <- pnorm(fit$mu_b + fit$tau_b) - pnorm(fit$mu_b)
+# -- smearing homoskedasticity diagnostics -----------------------------------
+cat("Testing the homoskedasticity assumption behind Duan's smearing...\n")
+smearing <- zicbcf_smearing_diagnostics(chains[[1L]], y = y, z = z, x = X)
+write.csv(smearing$test, file.path(outdir, "onc_smearing_bp_test.csv"), row.names = FALSE)
+write.csv(smearing$draw_test, file.path(outdir, "onc_smearing_bp_draws.csv"), row.names = FALSE)
+write.csv(smearing$residual_scale, file.path(outdir, "onc_smearing_residual_scale.csv"),
+          row.names = FALSE)
+write.csv(smearing$sensitivity, file.path(outdir, "onc_smearing_sensitivity.csv"),
+          row.names = FALSE)
+cat(sprintf("  Breusch-Pagan p = %.4f; locally smeared ATE differs by %.1f%%\n",
+            smearing$test$p_value, 100 * smearing$sensitivity$relative_change))
+
+# -- pool the chains ---------------------------------------------------------
+# The reported posterior is the pooled draw set across all chains.
+cate_draws <- do.call(rbind, lapply(chains, function(f) f$cate))
+ate_draws <- unlist(lapply(chains, function(f) f$ate), use.names = FALSE)
+hurdle_cate_draws <- do.call(rbind, lapply(chains, function(f) {
+  pnorm(f$mu_b + f$tau_b) - pnorm(f$mu_b)
+}))
 hurdle_ate_draws <- rowMeans(hurdle_cate_draws)
-hurdle_ate_ci <- quantile(hurdle_ate_draws, c(0.025, 0.975))
+
+saveRDS(cate_draws, file.path(outdir, "onc_cate_draws.rds"))
 saveRDS(list(hurdle_cate_draws = hurdle_cate_draws,
              hurdle_ate_draws = hurdle_ate_draws,
              hurdle_cate_mean = colMeans(hurdle_cate_draws)),
         file.path(outdir, "onc_hurdle_draws.rds"))
+
+hurdle_ate_ci <- quantile(hurdle_ate_draws, c(0.025, 0.975))
 write.csv(data.frame(
   Metric = c("Hurdle ATE", "Hurdle ATE Lower 95% CI",
              "Hurdle ATE Upper 95% CI", "P(Hurdle ATE>0)",
@@ -84,105 +125,45 @@ write.csv(data.frame(
 
 # -- ATE ---------------------------------------------------------------------
 ate_mean <- mean(ate_draws)
-ate_ci   <- quantile(ate_draws, c(0.025, 0.975))
-cat(sprintf("\nATE: %.2f days  95%% CI [%.2f, %.2f]  P(>0)=%.3f\n",
+ate_ci <- quantile(ate_draws, c(0.025, 0.975))
+cat(sprintf("\nATE: %.2f days  95%% CrI [%.2f, %.2f]  P(>0)=%.3f\n",
             ate_mean, ate_ci[1], ate_ci[2], mean(ate_draws > 0)))
 
 cate_mean <- colMeans(cate_draws)
-res <- data.frame(
+write.csv(data.frame(
   Metric = c("ATE", "Lower 95% CI", "Upper 95% CI", "P(ATE>0)",
              "Mean CATE", "Median CATE"),
-  Value  = c(ate_mean, ate_ci[1], ate_ci[2], mean(ate_draws > 0),
-             mean(cate_mean), median(cate_mean))
-)
-write.csv(res, file.path(outdir, "onc_ate_results.csv"), row.names = FALSE)
+  Value = c(ate_mean, ate_ci[1], ate_ci[2], mean(ate_draws > 0),
+            mean(cate_mean), median(cate_mean))
+), file.path(outdir, "onc_ate_results.csv"), row.names = FALSE)
+
+# -- unadjusted arm difference, for the randomization benchmark --------------
+# Under randomization the unadjusted difference is itself unbiased for the
+# cohort average effect, so proximity to it is the benchmark a model should
+# meet, not a weakness of the model.
+unadjusted <- mean(y[z == 1]) - mean(y[z == 0])
+cat(sprintf("Unadjusted arm difference: %.2f days\n", unadjusted))
+write.csv(data.frame(Metric = "Unadjusted arm difference (event-days)",
+                     Value = unadjusted),
+          file.path(outdir, "onc_unadjusted_difference.csv"), row.names = FALSE)
 
 # ===========================================================================
-# Subgroup CATE machinery (identical logic to the MEPS study)
+# Subgroup CATEs and pairwise contrasts
 # ===========================================================================
-subgroup_cate <- function(idx) {
-  sub <- cate_draws[, idx, drop = FALSE]
-  draw_means <- rowMeans(sub)
-  c(N = ncol(sub),
-    CATE = mean(draw_means),
-    CI_low  = unname(quantile(draw_means, 0.025)),
-    CI_high = unname(quantile(draw_means, 0.975)),
-    P_gt_0  = mean(draw_means > 0))
-}
+labels <- onc_subgroup_labels(df)
 
-contrast_cate <- function(idx_a, idx_b) {
-  da <- rowMeans(cate_draws[, idx_a, drop = FALSE])
-  db <- rowMeans(cate_draws[, idx_b, drop = FALSE])
-  d  <- da - db
-  c(Diff = mean(d),
-    CI_low  = unname(quantile(d, 0.025)),
-    CI_high = unname(quantile(d, 0.975)),
-    P_gt_0  = mean(d > 0))
-}
-
-# -- interpretable subgroup labels ------------------------------------------
-sex_lab    <- factor(df$sex, levels = c("Male", "Female"))
-ecog_lab   <- factor(df$b_ecogct, levels = c(0, 1),
-                     labels = c("ECOG 0", "ECOG 1"))
-diag_lab   <- factor(df$diagtype)
-tumcat_lab <- factor(df$tumcat, levels = c("N", "Y"),
-                     labels = c("Tumor cat. N", "Tumor cat. Y"))
-hpv_lab    <- factor(df$hpv, levels = c("Negative", "Positive", "Unknown"))
-dstat_lab  <- factor(df$dstatus,
-                     levels = c("newly diagnosed", "recurrent"))
-age_lab    <- cut(df$age, breaks = c(-Inf, 49, 59, 69, Inf),
-                  labels = c("<50", "50-59", "60-69", "70+"))
-
-group_vars <- list(
-  Sex               = sex_lab,
-  `ECOG status`     = ecog_lab,
-  `Diagnosis site`  = diag_lab,
-  `Tumor category`  = tumcat_lab,
-  `HPV status`      = hpv_lab,
-  `Disease status`  = dstat_lab,
-  `Age group`       = age_lab
-)
-
-# -- overall + per-subgroup CATE table --------------------------------------
-rows <- list()
-rows[[1]] <- data.frame(Covariate = "Overall", Level = "All",
-                        t(subgroup_cate(rep(TRUE, ncol(cate_draws)))),
-                        check.names = FALSE)
-for (gname in names(group_vars)) {
-  lab <- group_vars[[gname]]
-  for (lv in levels(lab)) {
-    idx <- which(lab == lv)
-    if (length(idx) < 30) next
-    rows[[length(rows) + 1]] <- data.frame(
-      Covariate = gname, Level = lv,
-      t(subgroup_cate(idx)), check.names = FALSE)
-  }
-}
-cate_table <- do.call(rbind, rows)
-rownames(cate_table) <- NULL
+cate_table <- onc_subgroup_table(cate_draws, labels, "ZIC-BCF-Smear",
+                                 "Summed severe-AE-record duration (event-days)")
+names(cate_table)[names(cate_table) == "Estimate"] <- "CATE"
 cate_table[, c("CATE", "CI_low", "CI_high")] <-
   round(cate_table[, c("CATE", "CI_low", "CI_high")], 2)
 cate_table$P_gt_0 <- round(cate_table$P_gt_0, 3)
 write.csv(cate_table, file.path(outdir, "onc_cate_subgroups.csv"), row.names = FALSE)
 cat("\n=== Subgroup CATE estimates ===\n"); print(cate_table)
 
-# -- pairwise heterogeneity contrasts ---------------------------------------
-crows <- list()
-for (gname in names(group_vars)) {
-  lab <- group_vars[[gname]]
-  lvs <- levels(lab)[table(lab) >= 30]
-  if (length(lvs) < 2) next
-  cmb <- combn(lvs, 2)
-  for (k in seq_len(ncol(cmb))) {
-    a <- cmb[1, k]; b <- cmb[2, k]
-    ct <- contrast_cate(which(lab == a), which(lab == b))
-    crows[[length(crows) + 1]] <- data.frame(
-      Covariate = gname, Contrast = paste(a, "-", b),
-      t(ct), check.names = FALSE)
-  }
-}
-contrast_table <- do.call(rbind, crows)
-rownames(contrast_table) <- NULL
+contrast_table <- onc_contrast_table(cate_draws, labels, "ZIC-BCF-Smear",
+                                     "Summed severe-AE-record duration (event-days)")
+names(contrast_table)[names(contrast_table) == "Estimate"] <- "Diff"
 contrast_table[, c("Diff", "CI_low", "CI_high")] <-
   round(contrast_table[, c("Diff", "CI_low", "CI_high")], 2)
 contrast_table$P_gt_0 <- round(contrast_table$P_gt_0, 3)
@@ -194,7 +175,6 @@ cat("\n=== Between-group CATE contrasts (heterogeneity) ===\n"); print(contrast_
 # ===========================================================================
 XLAB <- "CATE: effect of panitumumab on cumulative grade 3+ AE duration (days)"
 
-# 11 - subgroup CATE forest with 95% credible intervals
 plot_df <- cate_table[cate_table$Covariate != "Overall", ]
 plot_df$row_lab <- paste0(plot_df$Covariate, ": ", plot_df$Level)
 plot_df <- plot_df[nrow(plot_df):1, ]
@@ -218,7 +198,6 @@ legend("bottomright",
        pch = c(19, NA, NA), lty = c(NA, 2, 3), lwd = c(2, 1, 2), bty = "n")
 dev.off()
 
-# 12 - ATE posterior
 png(file.path(outdir, "12_ONC_ate_posterior.png"), width = 900, height = 600)
 hist(ate_draws, breaks = 40, col = "skyblue", border = "white",
      main = "Posterior distribution of the ATE",
@@ -232,7 +211,6 @@ legend("topright",
        col = "firebrick", lwd = 2, lty = c(1, 2), bty = "n")
 dev.off()
 
-# 13 - unit-level CATE histogram
 png(file.path(outdir, "13_ONC_cate_unit_histogram.png"), width = 900, height = 600)
 hist(cate_mean, breaks = 50, col = "skyblue", border = "white",
      main = "Distribution of unit-level Conditional Average Treatment Effects",
@@ -240,21 +218,18 @@ hist(cate_mean, breaks = 50, col = "skyblue", border = "white",
 abline(v = ate_mean, col = "firebrick", lwd = 2, lty = 3)
 dev.off()
 
-# 14 - subgroup CATE posterior densities (ECOG, tumor category, disease status)
-dens_groups <- list(`ECOG status` = ecog_lab,
-                    `Tumor category` = tumcat_lab,
-                    `Disease status` = dstat_lab)
+dens_groups <- labels[c("ECOG status", "Prior SCCHN treatment", "Disease status")]
 png(file.path(outdir, "14_ONC_cate_subgroup_densities.png"), width = 1000, height = 850)
 par(mfrow = c(2, 2), mar = c(4.5, 4, 3, 1))
 for (gname in names(dens_groups)) {
   lab <- dens_groups[[gname]]
-  lvs <- levels(lab)[table(lab) >= 30]
+  lvs <- levels(lab)[table(lab) >= ONC_MIN_SUBGROUP_N]
   dens <- lapply(lvs, function(lv) density(rowMeans(cate_draws[, which(lab == lv), drop = FALSE])))
   xr <- range(sapply(dens, function(d) range(d$x)))
   yr <- range(sapply(dens, function(d) range(d$y)))
   cols <- c("steelblue", "firebrick", "darkgreen")[seq_along(lvs)]
-  plot(NA, xlim = xr, ylim = yr, xlab = "Subgroup CATE (days)", ylab = "Posterior density",
-       main = gname)
+  plot(NA, xlim = xr, ylim = yr, xlab = "Subgroup CATE (days)",
+       ylab = "Posterior density", main = gname)
   for (i in seq_along(dens)) {
     lines(dens[[i]], col = cols[i], lwd = 2)
     polygon(dens[[i]], col = adjustcolor(cols[i], 0.2), border = NA)
@@ -264,7 +239,6 @@ for (gname in names(dens_groups)) {
 }
 dev.off()
 
-# 15 - unit-level CATE vs age with LOWESS trend
 png(file.path(outdir, "15_ONC_cate_vs_age.png"), width = 900, height = 600)
 plot(df$age, cate_mean, pch = 19, col = adjustcolor("steelblue", 0.4),
      xlab = "Baseline age (years)", ylab = "Unit posterior-mean CATE (days)",
@@ -273,7 +247,6 @@ lines(lowess(df$age, cate_mean, f = 0.5), col = "firebrick", lwd = 3)
 abline(h = ate_mean, lty = 3, col = "grey40")
 dev.off()
 
-# 16 - between-subgroup contrasts forest
 ct <- contrast_table
 ct$row_lab <- paste0(ct$Covariate, ": ", ct$Contrast)
 ct <- ct[nrow(ct):1, ]
@@ -295,5 +268,5 @@ legend("bottomright",
 dev.off()
 
 cat("\nATE:", round(ate_mean, 2),
-    " 95% CI [", round(ate_ci[1], 2), ",", round(ate_ci[2], 2), "]\n")
+    " 95% CrI [", round(ate_ci[1], 2), ",", round(ate_ci[2], 2), "]\n")
 cat("Completed successfully.\n")

@@ -1,0 +1,9 @@
+variable,outcome_label,n_total,n_zero,pct_zero,n_positive,mean_positive,median_positive,p90_positive,p95_positive,max_positive
+IPTEXP23,Inpatient expenditures,18919,17524,92.63,1395,24826.6,13608,56205,88604.9,458360
+ERTEXP23,Emergency room expenditures,18919,16217,85.72,2702,1927.34,924,3968.1,6281.65,195314
+VISEXP23,Vision expenditures,18919,15048,79.54,3871,435.58,330,874,1103,4393
+OTHEXP23,Other medical expenditures,18919,14553,76.92,4366,1202.19,351,2757.5,3707.5,83742
+OPTEXP23,Outpatient expenditures,18919,14096,74.51,4823,3839.66,877,9123.4,16325.3,337570
+DVTEXP23,Dental expenditures,18919,10446,55.21,8473,1037.33,361,2504,4506.8,40350
+RXEXP23,Prescription drug expenditures,18919,7073,37.39,11846,3237.2,251.5,7145.5,13729,372016
+TOTEXP23,Total medical expenditures,18919,2655,14.03,16264,9796.9,2667.5,24326.8,42151.75,574675

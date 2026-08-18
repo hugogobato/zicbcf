@@ -1,0 +1,520 @@
+---
+title: "MEPS 2023 Dental Expenditure ZIC-BCF Plan B Analysis"
+author: "Eric Wang"
+output: html_document
+date: "2026-07-01"
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+
+# ============================================================
+# MEPS 2023 Dental Expenditure Analysis for ZIC-BCF Plan B
+# ============================================================
+#
+# Purpose:
+# This script screens MEPS 2023 expenditure variables for a
+# zero-inflated continuous structure, then prepares annual dental
+# expenditure as a candidate applied dataset for ZIC-BCF modeling.
+#
+# Main outcome:
+#   y = Annual dental expenditure in 2023 (DVTEXP23)
+#
+# Exposure:
+#   dental_insurance = Any dental insurance coverage in 2023
+#
+# Notes:
+#   - This script assumes that h251.dta, the 2023 MEPS Full-Year
+#     Consolidated public-use file, is saved in the working folder.
+#   - The raw MEPS file is publicly available from AHRQ.
+#   - The baseline hurdle model below uses scaled MEPS person weights
+#     for a simple weighted demonstration. It is not intended to be a
+#     full complex-survey design analysis.
+
+library(haven)
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(broom)
+
+# ------------------------------------------------------------
+# User settings
+# ------------------------------------------------------------
+
+# Put h251.dta in this folder, or change this path.
+meps_dir <- getwd()
+
+raw_file <- file.path(meps_dir, "h251.dta")
+
+out_dir <- file.path(meps_dir, "MEPS_ZICBCF_planB_outputs")
+if (!dir.exists(out_dir)) {
+  dir.create(out_dir, recursive = TRUE)
+}
+
+# ------------------------------------------------------------
+# Load MEPS 2023 Full-Year Consolidated file
+# ------------------------------------------------------------
+
+meps <- read_dta(raw_file)
+
+
+# ============================================================
+# 1. Screen candidate zero-inflated continuous expenditure outcomes
+# ============================================================
+
+candidate_outcomes <- c(
+  "DVTEXP23",  # dental expenditures
+  "VISEXP23",  # vision expenditures
+  "RXEXP23",   # prescription drug expenditures
+  "OPTEXP23",  # outpatient expenditures
+  "ERTEXP23",  # emergency room expenditures
+  "IPTEXP23",  # inpatient expenditures
+  "OTHEXP23",  # other medical expenditures
+  "TOTEXP23"   # total medical expenditures
+)
+
+outcome_labels <- c(
+  DVTEXP23  = "Dental expenditures",
+  VISEXP23  = "Vision expenditures",
+  RXEXP23   = "Prescription drug expenditures",
+  OPTEXP23  = "Outpatient expenditures",
+  ERTEXP23  = "Emergency room expenditures",
+  IPTEXP23  = "Inpatient expenditures",
+  OTHEXP23  = "Other medical expenditures",
+  TOTEXP23  = "Total medical expenditures"
+)
+
+candidate_comparison <- lapply(candidate_outcomes, function(v) {
+  x <- meps[[v]]
+  x <- x[!is.na(x) & x >= 0]
+  x_pos <- x[x > 0]
+
+  data.frame(
+    variable = v,
+    outcome_label = outcome_labels[[v]],
+    n_total = length(x),
+    n_zero = sum(x == 0),
+    pct_zero = round(100 * mean(x == 0), 2),
+    n_positive = length(x_pos),
+    mean_positive = round(mean(x_pos), 2),
+    median_positive = round(median(x_pos), 2),
+    p90_positive = round(quantile(x_pos, 0.90), 2),
+    p95_positive = round(quantile(x_pos, 0.95), 2),
+    max_positive = max(x_pos)
+  )
+}) %>%
+  bind_rows() %>%
+  arrange(desc(pct_zero))
+
+print(candidate_comparison)
+
+write_csv(
+  candidate_comparison,
+  file.path(out_dir, "01_MEPS_candidate_outcome_comparison.csv")
+)
+
+
+
+# ============================================================
+# 2. Prepare dental expenditure analysis dataset
+# ============================================================
+
+dental_data <- meps %>%
+  transmute(
+    id = DUPERSID,
+
+    # Outcome
+    y = DVTEXP23,
+    any_y = as.integer(DVTEXP23 > 0),
+
+    # Exposure: any dental insurance coverage in 2023
+    # MEPS coding:
+    #   1 = Yes
+    #   2 = No
+    dental_insurance_raw = DNTINS23_M23,
+    dental_insurance = case_when(
+      DNTINS23_M23 == 1 ~ 1,
+      DNTINS23_M23 == 2 ~ 0,
+      TRUE ~ NA_real_
+    ),
+
+    # Covariates
+    age = AGE23X,
+    female = case_when(
+      SEX == 2 ~ 1,
+      SEX == 1 ~ 0,
+      TRUE ~ NA_real_
+    ),
+    race_ethnicity = factor(RACETHX),
+    education_years = ifelse(EDUCYR >= 0, EDUCYR, NA),
+    poverty_category = factor(POVCAT23),
+    general_health = factor(ifelse(RTHLTH31 > 0, RTHLTH31, NA)),
+
+    cancer_dx = case_when(
+      CANCERDX == 1 ~ 1,
+      CANCERDX == 2 ~ 0,
+      TRUE ~ NA_real_
+    ),
+
+    # MEPS survey variables
+    person_weight = PERWT23F,
+    varstr = VARSTR,
+    varpsu = VARPSU
+  ) %>%
+  filter(
+    !is.na(y),
+    y >= 0,
+    !is.na(any_y),
+    !is.na(dental_insurance),
+    !is.na(age),
+    !is.na(female),
+    !is.na(race_ethnicity),
+    !is.na(education_years),
+    !is.na(poverty_category),
+    !is.na(general_health),
+    person_weight > 0
+  ) %>%
+  mutate(
+    # Scaled weights for model stability
+    weight_scaled = person_weight / mean(person_weight, na.rm = TRUE)
+  )
+
+write_csv(
+  dental_data,
+  file.path(out_dir, "meps_2023_dental_hurdle_model_data.csv")
+)
+
+
+# ============================================================
+# 3. Summarize zero-inflated dental expenditure structure
+# ============================================================
+
+dental_summary <- dental_data %>%
+  summarise(
+    n = n(),
+    n_zero = sum(y == 0),
+    pct_zero = round(100 * mean(y == 0), 2),
+    n_positive = sum(y > 0),
+    mean_positive = round(mean(y[y > 0]), 2),
+    median_positive = round(median(y[y > 0]), 2),
+    p90_positive = round(quantile(y[y > 0], 0.90), 2),
+    p95_positive = round(quantile(y[y > 0], 0.95), 2),
+    max_positive = max(y)
+  )
+
+print(dental_summary)
+
+write_csv(
+  dental_summary,
+  file.path(out_dir, "02_MEPS_dental_hurdle_summary.csv")
+)
+
+
+# ============================================================
+# 4. Descriptive plots
+# ============================================================
+
+# ------------------------------------------------------------
+# Plot 1: zero vs positive dental expenditure
+# ------------------------------------------------------------
+
+zero_plot_data <- dental_data %>%
+  mutate(
+    expenditure_group = ifelse(
+      y == 0,
+      "Zero dental expenditure",
+      "Positive dental expenditure"
+    )
+  ) %>%
+  count(expenditure_group) %>%
+  mutate(
+    percent = round(100 * n / sum(n), 1),
+    label = paste0(n, " (", percent, "%)")
+  )
+
+p_zero <- ggplot(zero_plot_data, aes(x = expenditure_group, y = n)) +
+  geom_col() +
+  geom_text(aes(label = label), vjust = -0.4, size = 4) +
+  labs(
+    title = "Zero vs Positive Annual Dental Expenditures, MEPS 2023",
+    x = "",
+    y = "Number of participants"
+  ) +
+  theme_minimal(base_size = 13)
+
+ggsave(
+  filename = file.path(out_dir, "06_MEPS_dental_zero_vs_positive.png"),
+  plot = p_zero,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+
+p_zero
+
+# ------------------------------------------------------------
+# Plot 2: positive dental expenditures on log scale
+# ------------------------------------------------------------
+
+positive_dental <- dental_data %>%
+  filter(y > 0)
+
+p_positive <- ggplot(positive_dental, aes(x = y)) +
+  geom_histogram(bins = 50) +
+  scale_x_log10() +
+  labs(
+    title = "Positive Annual Dental Expenditures, MEPS 2023",
+    x = "Dental expenditure, log10 scale",
+    y = "Number of participants"
+  ) +
+  theme_minimal(base_size = 13)
+
+ggsave(
+  filename = file.path(out_dir, "07_MEPS_positive_dental_expenditure_log_histogram.png"),
+  plot = p_positive,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+
+p_positive
+
+# ------------------------------------------------------------
+# Plot 3: positive dental expenditure by dental insurance
+# ------------------------------------------------------------
+
+positive_dental_plot <- positive_dental %>%
+  mutate(
+    dental_insurance_label = ifelse(
+      dental_insurance == 1,
+      "Dental insurance",
+      "No dental insurance"
+    )
+  )
+
+p_by_ins <- ggplot(
+  positive_dental_plot,
+  aes(x = dental_insurance_label, y = y)
+) +
+  geom_boxplot(outlier.alpha = 0.2) +
+  scale_y_log10() +
+  labs(
+    title = "Positive Dental Expenditures by Dental Insurance Status",
+    x = "",
+    y = "Dental expenditure, log10 scale"
+  ) +
+  theme_minimal(base_size = 13)
+
+ggsave(
+  filename = file.path(out_dir, "08_MEPS_positive_dental_expenditure_by_insurance.png"),
+  plot = p_by_ins,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+
+p_by_ins
+
+# ------------------------------------------------------------
+# Plot 4: percent with any dental spending by dental insurance
+# ------------------------------------------------------------
+
+any_spending_by_ins <- dental_data %>%
+  mutate(
+    dental_insurance_label = ifelse(
+      dental_insurance == 1,
+      "Dental insurance",
+      "No dental insurance"
+    )
+  ) %>%
+  group_by(dental_insurance_label) %>%
+  summarise(
+    n = n(),
+    pct_any_spending = 100 * mean(any_y == 1),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    label = paste0(round(pct_any_spending, 1), "%")
+  )
+
+p_any_by_ins <- ggplot(
+  any_spending_by_ins,
+  aes(x = dental_insurance_label, y = pct_any_spending)
+) +
+  geom_col() +
+  geom_text(aes(label = label), vjust = -0.4, size = 4) +
+  labs(
+    title = "Percent with Any Dental Expenditure by Dental Insurance Status",
+    x = "",
+    y = "Percent with any dental expenditure"
+  ) +
+  theme_minimal(base_size = 13)
+
+ggsave(
+  filename = file.path(out_dir, "09_MEPS_any_dental_expenditure_by_insurance.png"),
+  plot = p_any_by_ins,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+
+p_any_by_ins
+
+
+# ============================================================
+# 5. Baseline Gamma hurdle model
+# ============================================================
+#
+# Part 1:
+#   Logistic regression for any dental expenditure
+#
+# Part 2:
+#   Gamma regression with log link among participants with
+#   positive dental expenditure
+#
+# This baseline model is included as a simple parametric comparison
+# for the proposed ZIC-BCF model.
+
+zero_part_model <- glm(
+  any_y ~ dental_insurance + age + female + race_ethnicity +
+    education_years + poverty_category + general_health + cancer_dx,
+  data = dental_data,
+  family = binomial(link = "logit"),
+  weights = weight_scaled
+)
+
+positive_part_model <- glm(
+  y ~ dental_insurance + age + female + race_ethnicity +
+    education_years + poverty_category + general_health + cancer_dx,
+  data = positive_dental,
+  family = Gamma(link = "log"),
+  weights = weight_scaled
+)
+
+zero_part_results <- tidy(
+  zero_part_model,
+  exponentiate = TRUE,
+  conf.int = TRUE
+)
+
+positive_part_results <- tidy(
+  positive_part_model,
+  exponentiate = TRUE,
+  conf.int = TRUE
+)
+
+write_csv(
+  zero_part_results,
+  file.path(out_dir, "04_MEPS_dental_logistic_part_full_results.csv")
+)
+
+write_csv(
+  positive_part_results,
+  file.path(out_dir, "05_MEPS_dental_gamma_part_full_results.csv")
+)
+
+print(zero_part_results)
+print(positive_part_results)
+
+
+# ============================================================
+# 6. Extract dental insurance effect from hurdle model
+# ============================================================
+
+logistic_dental_effect <- zero_part_results %>%
+  filter(term == "dental_insurance") %>%
+  mutate(
+    model_part = "Logistic part: any dental expenditure",
+    effect_interpretation = "Odds ratio for having any dental expenditure"
+  ) %>%
+  select(
+    model_part,
+    term,
+    estimate,
+    conf.low,
+    conf.high,
+    p.value,
+    effect_interpretation
+  )
+
+gamma_dental_effect <- positive_part_results %>%
+  filter(term == "dental_insurance") %>%
+  mutate(
+    model_part = "Gamma part: positive dental expenditure amount",
+    effect_interpretation = "Multiplicative ratio among participants with positive dental expenditure"
+  ) %>%
+  select(
+    model_part,
+    term,
+    estimate,
+    conf.low,
+    conf.high,
+    p.value,
+    effect_interpretation
+  )
+
+main_effect_summary <- bind_rows(
+  logistic_dental_effect,
+  gamma_dental_effect
+) %>%
+  mutate(
+    estimate = round(estimate, 3),
+    conf.low = round(conf.low, 3),
+    conf.high = round(conf.high, 3),
+    p.value = signif(p.value, 3)
+  )
+
+print(main_effect_summary)
+
+write_csv(
+  main_effect_summary,
+  file.path(out_dir, "03_MEPS_dental_insurance_hurdle_effect_summary.csv")
+)
+
+
+
+# ============================================================
+# 7. Short text summary for email or notes
+# ============================================================
+
+summary_text <- c(
+  "MEPS 2023 dental expenditure Plan B dataset summary",
+  "",
+  paste0("Cleaned analysis N: ", dental_summary$n),
+  paste0("Zero dental expenditure N: ", dental_summary$n_zero),
+  paste0("Positive dental expenditure N: ", dental_summary$n_positive),
+  paste0("Percent zero: ", dental_summary$pct_zero, "%"),
+  paste0("Median positive dental expenditure: $", dental_summary$median_positive),
+  paste0("90th percentile positive dental expenditure: $", dental_summary$p90_positive),
+  paste0("95th percentile positive dental expenditure: $", dental_summary$p95_positive),
+  paste0("Maximum positive dental expenditure: $", dental_summary$max_positive),
+  "",
+  "Baseline Gamma hurdle model:",
+  paste0(
+    "Dental insurance effect on any dental expenditure: OR = ",
+    main_effect_summary$estimate[1],
+    " (95% CI ",
+    main_effect_summary$conf.low[1],
+    " to ",
+    main_effect_summary$conf.high[1],
+    ")."
+  ),
+  paste0(
+    "Dental insurance effect among participants with positive dental expenditure: ratio = ",
+    main_effect_summary$estimate[2],
+    " (95% CI ",
+    main_effect_summary$conf.low[2],
+    " to ",
+    main_effect_summary$conf.high[2],
+    ")."
+  )
+)
+
+writeLines(
+  summary_text,
+  file.path(out_dir, "10_MEPS_planB_short_summary.txt")
+)
+
+cat("\nDone. Final outputs saved to:\n")
+cat(out_dir, "\n")
+
+```

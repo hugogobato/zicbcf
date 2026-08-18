@@ -30,23 +30,45 @@ src/*:Zone.Identifier
 
 /theory
 CONTINUOUS_TREATMENT_EXTENSION.md
+## MEPS applied study.
+##
+## The 2023 MEPS Full-Year Consolidated file is a public AHRQ release and is
+## freely redistributable, so nothing here is excluded for confidentiality
+## reasons. Only three categories are excluded: the raw input file, which is
+## roughly 60 MB and is instead fetched by download_meps_h251.R; posterior draw
+## objects, which are large and fully regenerable; and the local manuscript
+## build materials. Every derived results table, figure and note is committed,
+## so the MEPS arm reproduces from a clean checkout.
 /applied_study/Literature_Review
-/applied_study/*.csv
-/applied_study/*.md
-/applied_study/*.txt
+## Private correspondence, not research material.
+/applied_study/Wangs_email.md
+/applied_study/h251.csv
+/applied_study/meps_2023_dental_hurdle_model_data.csv
+/applied_study/*.rds
+/applied_study/*.log
 /applied_study/*.bib
 /applied_study/*.tex
 /applied_study/*.pdf
-/applied_study/meps.Rmd
 /applied_study/imsart.cls
-/applied_study/cate_draws.rds
 /applied_study/imsart.sty
 /applied_study/ba.bst
-/applied_study/gamma_hurdle_draws.rds
-/applied_study/zicbcf_hurdle_run.log
-/applied_study/zicbcf_hurdle_draws.rds
 
 
+## Oncology applied study (SPECTRUM, Project Data Sphere).
+##
+## Every patient-level file and every per-patient derivative is excluded, and
+## this exclusion is deliberate and required. Section III.B(ii) of the Project
+## Data Sphere Platform Agreement prohibits disclosure of the data to any third
+## party who is not a registered Authorized User, and Article VIII requires
+## strict confidence. That is contractual confidentiality rather than patient
+## privacy, so further de-identification does not make a per-patient file safe
+## to post. Article VII permits disclosure of what is reasonably necessary to
+## publish research results, which is why aggregate estimates and plots appear
+## in the manuscript, but the agreement does not define where a derived
+## quantity stops being "the Data". The results tables in this directory are
+## therefore also withheld pending written confirmation from Project Data
+## Sphere or Amgen; they are regenerable by any Authorized User from the
+## scripts, which are committed.
 /applied_study_oncology/Literature_Review
 /applied_study_oncology/*.csv
 /applied_study_oncology/*.md
@@ -64,11 +86,31 @@ CONTINUOUS_TREATMENT_EXTENSION.md
 /applied_study_oncology/zicbcf_hurdle_run.log
 /applied_study_oncology/zicbcf_hurdle_draws.rds
 
+/applied_study_oncology/13_ONC_cate_unit_histogram.png
+/applied_study_oncology/18_ONC_gamma_hurdle_cate_histogram.png
+/applied_study_oncology/19_ONC_gamma_hurdle_hurdle_cate_histogram.png
+
+
+
 /applied_study_oncology/eadNe_265_severe_AE_screening.Rmd
+## Raw SAS transport files as supplied by Project Data Sphere. These are the
+## Data itself and are excluded everywhere in the repository, not just in the
+## two directories where they currently sit.
+*.sas7bdat
+/applied_study_oncology/corevar.sas7bdat
 /applied_study_oncology/New_Data/ae.sas7bdat
+## Study documentation supplied with the release (data dictionary, download
+## record). Distributed to Authorized Users by Project Data Sphere, not by us.
 /applied_study_oncology/New_Data/*.pdf
+/applied_study_oncology/*.sas7bdat
 
 
+## Box plots that render one point per patient are per-patient derivatives in
+## graphical form, so they are withheld with the rest of that material; the
+## aggregate attenuation curve is not.
+/applied_study_oncology/New_Data/analysis/treatment_exposure_distribution.png
+/applied_study_oncology/New_Data/analysis/exposure_rate_distribution.png
+/applied_study_oncology/New_Data/analysis/endpoint_distribution_by_treatment.png
 /applied_study_oncology/New_Data/analysis/*.csv
 /applied_study_oncology/New_Data/analysis/*.rds
 /applied_study_oncology/New_Data/analysis/*.log

@@ -70,7 +70,7 @@ if (nrow(patients) != n_distinct(patients$SUBJID)) {
 
 required_patient_variables <- c(
   "SUBJID", "AGE", "SEX", "TRTCD", "TRT", "B_ECOGCT", "DIAGTYPE",
-  "TUMCAT", "HPV", "DSTATUS", "severe_ae_total_duration"
+  "TUMCAT", "HPV", "DSTATUS", "PRHNTRTC", "TRTDUR", "severe_ae_total_duration"
 )
 missing_patient_variables <- setdiff(required_patient_variables, names(patients))
 if (length(missing_patient_variables) > 0L) {
@@ -79,6 +79,15 @@ if (length(missing_patient_variables) > 0L) {
 
 qualifying_events <- ae %>% filter(severe_ae, on_study)
 complete_events <- qualifying_events %>% filter(complete_imputed_interval)
+
+# Per-patient completeness of the qualifying records. Patients whose qualifying
+# records all lack a resolvable interval are assigned zero distinct severe-AE
+# days below; that assignment is a data limitation, not an observation, so the
+# count is reported rather than left for a reader to infer.
+patient_completeness <- qualifying_events %>%
+  group_by(SUBJID) %>%
+  summarise(qualifying_records = n(),
+            complete_records = sum(complete_imputed_interval), .groups = "drop")
 
 # First verify that the earlier record-duration endpoint is reproducible from
 # this AE extract.  This also establishes a valid linkage to the baseline and
@@ -139,7 +148,16 @@ analysis_data <- patients %>%
     # Retain that prespecified category so that the adjusted analysis has the
     # same 520-patient covariate set as the original record-duration analysis.
     hpv = coalesce(HPV, "Unknown"),
-    dstatus = DSTATUS
+    dstatus = DSTATUS,
+    # Prior treatment for squamous-cell carcinoma of the head and neck. Prior
+    # therapy to the head and neck is a principal determinant of the mucosal
+    # and cutaneous toxicity this endpoint measures, so it enters the
+    # adjustment set (see ../oncology_common.R).
+    prior_hn_treatment = PRHNTRTC,
+    # Time on treatment. Post-randomization, therefore never adjusted for; it
+    # is carried only so that the descriptive exposure analyses can run from
+    # this file.
+    treatment_duration = TRTDUR
   ) %>%
   left_join(calendar_days_by_patient, by = "SUBJID") %>%
   mutate(
@@ -155,7 +173,8 @@ if (anyNA(analysis_data$treatment) || !all(analysis_data$treatment %in% c(0L, 1L
   stop("Treatment could not be coded as 0/1 from TRTCD.")
 }
 
-model_variables <- c("age", "sex", "b_ecogct", "diagtype", "tumcat", "hpv", "dstatus")
+model_variables <- c("age", "sex", "b_ecogct", "diagtype", "hpv", "dstatus",
+                     "prior_hn_treatment")
 if (anyNA(analysis_data[, model_variables])) {
   stop("Baseline covariates contain missing values after endpoint construction.")
 }
@@ -189,6 +208,9 @@ quality_summary <- bind_rows(
       "Grade 3+ records with complete raw start/end days",
       "Grade 3+ records with complete imputed start/end days",
       "Grade 3+ records with unresolved imputed start or end day",
+      "Unresolved records missing the end day only",
+      "Patients with at least one unresolved record",
+      "Patients with no complete qualifying interval, assigned zero",
       "Patients with zero non-overlapping severe-AE days",
       "Patients with at least one day removed through interval overlap",
       "Total record-days before interval union",
@@ -201,6 +223,10 @@ quality_summary <- bind_rows(
       sum(is.finite(qualifying_events$AESTDY) & is.finite(qualifying_events$AEENDY)),
       nrow(complete_events),
       sum(!qualifying_events$complete_imputed_interval),
+      sum(with(qualifying_events[!qualifying_events$complete_imputed_interval, ],
+               is.finite(AESTDYI) & !is.finite(AEENDYI))),
+      n_distinct(qualifying_events$SUBJID[!qualifying_events$complete_imputed_interval]),
+      sum(patient_completeness$complete_records == 0L),
       sum(analysis_data$nonoverlap_severe_ae_days == 0),
       sum(analysis_data$overlap_days_removed > 0),
       sum(analysis_data$complete_record_days),

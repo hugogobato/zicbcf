@@ -1,0 +1,14 @@
+MEPS 2023 dental expenditure Plan B dataset summary
+
+Cleaned analysis N: 17127
+Zero dental expenditure N: 9126
+Positive dental expenditure N: 8001
+Percent zero: 53.28%
+Median positive dental expenditure: $376
+90th percentile positive dental expenditure: $2600
+95th percentile positive dental expenditure: $4655
+Maximum positive dental expenditure: $40350
+
+Baseline Gamma hurdle model:
+Dental insurance effect on any dental expenditure: OR = 1.862 (95% CI 1.719 to 2.016).
+Dental insurance effect among participants with positive dental expenditure: ratio = 1.027 (95% CI 0.918 to 1.147).
