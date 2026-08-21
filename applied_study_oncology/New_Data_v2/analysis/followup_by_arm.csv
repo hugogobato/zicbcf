@@ -1,0 +1,3 @@
+arm,n,safety_followup_completed,safety_followup_completed_percent,mean_safety_followup_day,median_safety_followup_day,mean_last_contact_day,median_last_contact_day,last_contact_before_84,last_contact_before_120,reaches_84_by_last_contact,reaches_120_by_last_contact
+Chemotherapy,260,181,69.61538461538461,110.74230769230769,119,376.81538461538463,250.5,47,66,213,194
+Panitumumab + chemotherapy,260,173,66.53846153846153,159.5,140,403.53076923076924,296,41,57,219,203

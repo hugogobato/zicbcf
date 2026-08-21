@@ -1,0 +1,9 @@
+Arm,Horizon,Mean_observed_days,N_reaching_horizon,Mean_among_reaching
+Chemotherapy,Last-contact-capped,19.176923076923078,NA,NA
+Panitumumab + chemotherapy,Last-contact-capped,30.903846153846153,NA,NA
+Chemotherapy,84 days,11.25,213,11.248826291079812
+Panitumumab + chemotherapy,84 days,14.334615384615384,219,14.926940639269406
+Chemotherapy,90 days,11.957692307692307,209,12.047846889952153
+Panitumumab + chemotherapy,90 days,15.273076923076923,218,16.077981651376145
+Chemotherapy,120 days,15.546153846153846,194,16.11855670103093
+Panitumumab + chemotherapy,120 days,19.58076923076923,203,21.246305418719214

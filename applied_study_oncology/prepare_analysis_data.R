@@ -9,7 +9,11 @@
 #                       of the head and neck. Per the data definition table this
 #                       is set to Y if the subject had prior radiotherapy as per
 #                       RAHX, or other prior treatment as per TXHX or OTHEPROC.
-#                       It enters the adjustment set (see oncology_common.R).
+#                       It is retained for descriptive and subgroup analyses.
+#
+#   prior_radiotherapy  PRRADIO, the patient-level prior-radiotherapy indicator
+#                       supplied in the v2 demo domain. It is the clinically
+#                       specific baseline adjustment variable.
 #
 #   treatment_duration  TRTDUR, defined in the data definition table as
 #                       LDOSDT - FDOSDT + 1. This is time on treatment. It is a
@@ -24,6 +28,7 @@
 
 suppressPackageStartupMessages({
   library(dplyr)
+  library(haven)
   library(readr)
 })
 
@@ -32,7 +37,35 @@ patient_file <- file.path(outdir, "headneck_265_severe_ae_patient_level.csv")
 out_file <- file.path(outdir, "zic_bcf_headneck_analysis_data.csv")
 if (!file.exists(patient_file)) stop("Missing patient-level file: ", patient_file)
 
-patients <- read_csv(patient_file, show_col_types = FALSE)
+patients <- read_csv(patient_file, show_col_types = FALSE) %>%
+  mutate(SUBJID = as.character(SUBJID))
+
+# The v2 Project Data Sphere download supplies the patient-level radiotherapy
+# indicator and disposition domains that were absent from the first extract.
+# Keep the original AE-derived patient file as the outcome source, but verify
+# that the new domains link one-to-one to the same 520 subjects.
+demo_file <- file.path(outdir, "New_Data_v2", "demo.sas7bdat")
+disposit_file <- file.path(outdir, "New_Data_v2", "disposit.sas7bdat")
+if (!file.exists(demo_file) || !file.exists(disposit_file)) {
+  stop("Missing New_Data_v2/demo.sas7bdat or New_Data_v2/disposit.sas7bdat.")
+}
+demo_v2 <- read_sas(demo_file, .name_repair = "minimal") %>%
+  mutate(SUBJID = as.character(SUBJID)) %>%
+  select(SUBJID, PRRADIO)
+disposit_v2 <- read_sas(disposit_file, .name_repair = "minimal") %>%
+  mutate(SUBJID = as.character(SUBJID)) %>%
+  select(SUBJID, DSSTAT, DSDY, LASTOSDY, LASTCTDY, AFUP, PFUP)
+
+if (nrow(demo_v2) != dplyr::n_distinct(demo_v2$SUBJID) ||
+    nrow(disposit_v2) != dplyr::n_distinct(disposit_v2$SUBJID) ||
+    !setequal(demo_v2$SUBJID, patients$SUBJID) ||
+    !setequal(disposit_v2$SUBJID, patients$SUBJID)) {
+  stop("New_Data_v2 domains do not link one-to-one to the analytic cohort.")
+}
+
+patients <- patients %>%
+  left_join(demo_v2, by = "SUBJID") %>%
+  left_join(disposit_v2, by = "SUBJID")
 
 required <- c("SUBJID", "AGE", "SEX", "TRTCD", "B_ECOGCT", "DIAGTYPE", "TUMCAT",
               "HPV", "DSTATUS", "PRHNTRTC", "PRHNTRTI", "TRTDUR",
@@ -65,17 +98,27 @@ analysis_data <- patients %>%
     dstatus = DSTATUS,
     prior_hn_treatment = PRHNTRTC,
     prior_hn_treatment_ivrs = PRHNTRTI,
-    treatment_duration = TRTDUR
+    prior_radiotherapy = PRRADIO,
+    treatment_duration = TRTDUR,
+    safety_followup_status = DSSTAT,
+    safety_followup_day = DSDY,
+    last_on_study_day = LASTOSDY,
+    last_contact_day = LASTCTDY,
+    actual_followup_weeks = AFUP,
+    potential_followup_weeks = PFUP
   )
 
 if (anyNA(analysis_data$treatment)) stop("Treatment could not be coded from TRTCD.")
 model_variables <- c("age", "b_ecogct", "sex", "diagtype", "hpv", "dstatus",
-                     "prior_hn_treatment")
+                     "prior_hn_treatment", "prior_radiotherapy")
 if (anyNA(analysis_data[, model_variables])) {
   stop("Adjustment-set covariates contain missing values.")
 }
 if (any(analysis_data$treatment_duration <= 0)) {
   stop("Treatment duration must be strictly positive.")
+}
+if (anyNA(analysis_data$last_contact_day) || any(analysis_data$last_contact_day < 1)) {
+  stop("Last-contact study day must be observed and positive.")
 }
 
 # Tumor category is retained in the file for descriptive use only. Verify that
@@ -126,6 +169,8 @@ write_csv(cohort_derivation, file.path(outdir, "cohort_derivation.csv"))
 cat("Wrote", out_file, "with", nrow(analysis_data), "patients.\n")
 cat("Prior SCCHN treatment (PRHNTRTC) by arm:\n")
 print(with(analysis_data, table(treatment_label, prior_hn_treatment)))
+cat("Prior radiotherapy (PRRADIO) by arm:\n")
+print(with(analysis_data, table(treatment_label, prior_radiotherapy)))
 cat("\nTreatment duration (TRTDUR) by arm, days:\n")
 print(analysis_data %>% group_by(treatment_label) %>%
         summarise(n = n(), mean = mean(treatment_duration),

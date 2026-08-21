@@ -89,8 +89,7 @@ cat(sprintf("Rate outcome: %d zeros of %d (%.1f%%); positive median %.2f, max %.
             sum(y_rate == 0), length(y_rate), 100 * mean(y_rate == 0),
             median(y_rate[y_rate > 0]), max(y_rate)))
 
-ps_model <- glm(z ~ ., data = as.data.frame(X), family = binomial())
-pihat <- predict(ps_model, type = "response")
+pihat <- rep(0.5, length(z))
 
 zic_chains <- lapply(CHAIN_SEEDS, function(seed) {
   set.seed(seed)

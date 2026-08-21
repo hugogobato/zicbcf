@@ -12,23 +12,23 @@
 #    to Y; hypopharynx and oral cavity map to N), so including both puts an
 #    exact linear combination of existing columns into the design matrix.
 #
-# 2. Prior treatment for squamous-cell carcinoma of the head and neck
-#    (PRHNTRTC) is added. Prior therapy to the head and neck is a principal
-#    determinant of mucosal and cutaneous toxicity, which is the outcome being
-#    modeled, and it is present in roughly four fifths of the cohort with a
-#    between-arm imbalance. PRHNTRTC is a composite of prior radiotherapy and
-#    other prior treatment; the supplied extract carries no radiation-specific
-#    patient-level field, so a radiotherapy-only version cannot be constructed.
+# 2. The now-available patient-level prior radiotherapy indicator (PRRADIO) is
+#    used in the adjustment set. Prior therapy to the head and neck is a
+#    principal determinant of mucosal and cutaneous toxicity, which is the
+#    outcome being modeled. PRHNTRTC is retained in the analysis data and
+#    subgroup reports as the broader composite, but is not entered alongside
+#    PRRADIO because the two indicators differ for only four patients and their
+#    near-redundancy destabilized the Gamma benchmark.
 
 ONC_COVARIATE_FORMULA <- ~ age + b_ecogct + sex + diagtype + hpv + dstatus +
-  prior_hn_treatment
+  prior_radiotherapy
 
 # Minimum subgroup size for a reported subgroup effect or pairwise contrast.
 ONC_MIN_SUBGROUP_N <- 30L
 
 onc_design_matrix <- function(df) {
   required <- c("age", "b_ecogct", "sex", "diagtype", "hpv", "dstatus",
-                "prior_hn_treatment")
+                "prior_radiotherapy")
   missing_columns <- setdiff(required, names(df))
   if (length(missing_columns) > 0L) {
     stop("Analysis data is missing: ", paste(missing_columns, collapse = ", "),
@@ -61,6 +61,9 @@ onc_subgroup_labels <- function(df) {
     `Prior SCCHN treatment` = factor(df$prior_hn_treatment, levels = c("N", "Y"),
                                      labels = c("No prior treatment",
                                                 "Prior treatment")),
+    `Prior radiotherapy` = factor(df$prior_radiotherapy, levels = c("N", "Y"),
+                                  labels = c("No prior radiotherapy",
+                                             "Prior radiotherapy")),
     `Age group` = cut(df$age, breaks = c(-Inf, 49, 59, 69, Inf),
                       labels = c("<50", "50-59", "60-69", "70+"))
   )

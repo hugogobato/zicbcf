@@ -87,10 +87,10 @@ N_CHAINS <- 4L
 CHAIN_SEEDS <- seq_len(N_CHAINS)
 
 # ZIC-BCF uses the same covariate set and posterior settings as the
-# record-duration analysis. The estimated propensity is retained for the
-# matched implementation, despite randomization making it 0.5 by design.
-ps_model <- glm(z ~ ., data = as.data.frame(X), family = binomial())
-pihat <- predict(ps_model, type = "response")
+# record-duration analysis. The known randomized assignment probability is
+# used directly rather than estimating a potentially separated propensity
+# model from the realized arms.
+pihat <- rep(0.5, length(z))
 zic_chains <- lapply(CHAIN_SEEDS, function(seed) {
   set.seed(seed)
   cat("  ZIC-BCF-Smear chain", seed, "\n")

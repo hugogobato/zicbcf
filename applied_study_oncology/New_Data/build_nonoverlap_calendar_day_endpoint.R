@@ -20,6 +20,7 @@ dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 ae_path <- file.path(data_dir, "ae.sas7bdat")
 patient_path <- file.path(data_dir, "..", "headneck_265_severe_ae_patient_level.csv")
+demo_path <- file.path(data_dir, "..", "New_Data_v2", "demo.sas7bdat")
 
 if (!file.exists(ae_path)) stop("Missing AE-level file: ", ae_path)
 if (!file.exists(patient_path)) stop("Missing patient-level file: ", patient_path)
@@ -63,6 +64,12 @@ ae <- read_sas(ae_path) %>%
 
 patients <- read_csv(patient_path, show_col_types = FALSE) %>%
   mutate(SUBJID = as.character(SUBJID))
+
+if (!file.exists(demo_path)) stop("Missing New_Data_v2/demo.sas7bdat")
+demo_v2 <- read_sas(demo_path, .name_repair = "minimal") %>%
+  mutate(SUBJID = as.character(SUBJID)) %>%
+  select(SUBJID, PRRADIO)
+patients <- patients %>% left_join(demo_v2, by = "SUBJID")
 
 if (nrow(patients) != n_distinct(patients$SUBJID)) {
   stop("The patient-level file must contain exactly one row per SUBJID.")
@@ -149,15 +156,15 @@ analysis_data <- patients %>%
     # same 520-patient covariate set as the original record-duration analysis.
     hpv = coalesce(HPV, "Unknown"),
     dstatus = DSTATUS,
-    # Prior treatment for squamous-cell carcinoma of the head and neck. Prior
-    # therapy to the head and neck is a principal determinant of the mucosal
-    # and cutaneous toxicity this endpoint measures, so it enters the
-    # adjustment set (see ../oncology_common.R).
+    # Retain the broader composite for descriptive and subgroup analyses.
+    # The more specific PRRADIO indicator below is the adjustment variable
+    # used by ../oncology_common.R.
     prior_hn_treatment = PRHNTRTC,
     # Time on treatment. Post-randomization, therefore never adjusted for; it
     # is carried only so that the descriptive exposure analyses can run from
     # this file.
-    treatment_duration = TRTDUR
+    treatment_duration = TRTDUR,
+    prior_radiotherapy = PRRADIO
   ) %>%
   left_join(calendar_days_by_patient, by = "SUBJID") %>%
   mutate(
@@ -174,7 +181,7 @@ if (anyNA(analysis_data$treatment) || !all(analysis_data$treatment %in% c(0L, 1L
 }
 
 model_variables <- c("age", "sex", "b_ecogct", "diagtype", "hpv", "dstatus",
-                     "prior_hn_treatment")
+                     "prior_hn_treatment", "prior_radiotherapy")
 if (anyNA(analysis_data[, model_variables])) {
   stop("Baseline covariates contain missing values after endpoint construction.")
 }
