@@ -1,0 +1,9 @@
+prior_radiotherapy,lesion_prior_rt_yes,lesion_prior_rt_no,n
+N,FALSE,FALSE,20
+N,FALSE,TRUE,42
+N,TRUE,FALSE,2
+N,TRUE,TRUE,40
+Y,FALSE,FALSE,127
+Y,FALSE,TRUE,179
+Y,TRUE,FALSE,21
+Y,TRUE,TRUE,89

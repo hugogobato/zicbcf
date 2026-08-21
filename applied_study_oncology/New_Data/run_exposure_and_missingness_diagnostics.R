@@ -29,7 +29,8 @@
 # 3. PRIOR TREATMENT FOR HEAD-AND-NECK CANCER. PRHNTRTC is measured, prevalent
 #    and imbalanced, and prior therapy to the head and neck is a principal
 #    determinant of the mucosal and cutaneous toxicity being modeled. Its
-#    distribution is reported here and it is added to the adjustment set in
+#    distribution is reported here. The v2 domain diagnostics separately
+#    report the now-available radiotherapy-specific PRRADIO variable used in
 #    oncology_common.R.
 
 suppressPackageStartupMessages({

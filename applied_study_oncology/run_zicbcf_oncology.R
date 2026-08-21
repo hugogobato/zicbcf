@@ -59,12 +59,11 @@ X <- onc_design_matrix(df)
 cat("Design matrix columns:", paste(colnames(X), collapse = ", "), "\n")
 
 # -- propensity score --------------------------------------------------------
-# This is a randomized trial (260/260), so the propensity is 0.5 by design; it
-# is still estimated from covariates for consistency with the MEPS pipeline.
-cat("Estimating propensity scores...\n")
-ps_model <- glm(z ~ ., data = as.data.frame(X), family = binomial())
-pihat <- predict(ps_model, type = "response")
-cat("pihat range: [", round(min(pihat), 3), ",", round(max(pihat), 3), "]\n")
+# This is a randomized trial (260/260), so the design propensity is 0.5. Use
+# that known assignment probability rather than estimating a potentially
+# separated observational propensity model from the realized arms.
+cat("Using the randomized design propensity pihat = 0.5...\n")
+pihat <- rep(0.5, length(z))
 
 # -- fit ZIC-BCF-Smear, one chain per seed -----------------------------------
 cat(sprintf("Fitting ZIC-BCF-Smear: %d chains of %d retained draws...\n",
