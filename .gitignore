@@ -85,6 +85,9 @@ CONTINUOUS_TREATMENT_EXTENSION.md
 /applied_study_oncology/gamma_hurdle_draws.rds
 /applied_study_oncology/zicbcf_hurdle_run.log
 /applied_study_oncology/zicbcf_hurdle_draws.rds
+## Reproducibility records, not patient-level derivatives.
+!/applied_study_oncology/session_info.txt
+!/applied_study_oncology/renv.lock
 
 /applied_study_oncology/13_ONC_cate_unit_histogram.png
 /applied_study_oncology/18_ONC_gamma_hurdle_cate_histogram.png
@@ -111,6 +114,23 @@ CONTINUOUS_TREATMENT_EXTENSION.md
 /applied_study_oncology/New_Data/analysis/treatment_exposure_distribution.png
 /applied_study_oncology/New_Data/analysis/exposure_rate_distribution.png
 /applied_study_oncology/New_Data/analysis/endpoint_distribution_by_treatment.png
-/applied_study_oncology/New_Data/analysis/*.csv
-/applied_study_oncology/New_Data/analysis/*.rds
-/applied_study_oncology/New_Data/analysis/*.log
+
+## Analysis-output subdirectories of ANY data drop.
+##
+## The rules above were a denylist keyed to exact directory names, which could
+## not survive the addition of a new versioned data directory: New_Data_v2/
+## therefore leaked a patient-level endpoint file until commit 41a6c44 was
+## rewritten to remove it. These recursive patterns cover every present and
+## future analysis/ subtree under applied_study_oncology/, whatever the data
+## drop is called, so nothing written by run_domain_diagnostics.R is ever
+## tracked again.
+/applied_study_oncology/**/analysis/*.csv
+/applied_study_oncology/**/analysis/*.rds
+/applied_study_oncology/**/analysis/*.log
+/applied_study_oncology/**/analysis/*.png
+/applied_study_oncology/**/analysis/*.pdf
+/applied_study_oncology/geweke_investigation/*.rds
+/applied_study_oncology/geweke_investigation/*.md
+
+/applied_study_oncology/Legal_Stuff/
+supplement.tex

@@ -15,10 +15,12 @@
 # 2. The now-available patient-level prior radiotherapy indicator (PRRADIO) is
 #    used in the adjustment set. Prior therapy to the head and neck is a
 #    principal determinant of mucosal and cutaneous toxicity, which is the
-#    outcome being modeled. PRHNTRTC is retained in the analysis data and
-#    subgroup reports as the broader composite, but is not entered alongside
-#    PRRADIO because the two indicators differ for only four patients and their
-#    near-redundancy destabilized the Gamma benchmark.
+#    outcome being modeled. PRHNTRTC is retained in the analysis data as the
+#    broader composite but is not entered alongside PRRADIO, in the adjustment
+#    set or the subgroup lists: the two indicators differ for only four
+#    patients, so carrying both adds a near-duplicate contrast to every
+#    subgroup grid in an analysis that is already unadjusted for multiplicity,
+#    and their near-redundancy destabilized the Gamma benchmark.
 
 ONC_COVARIATE_FORMULA <- ~ age + b_ecogct + sex + diagtype + hpv + dstatus +
   prior_radiotherapy
@@ -58,9 +60,9 @@ onc_subgroup_labels <- function(df) {
                           labels = c("Negative", "Positive", "Not recorded")),
     `Disease status` = factor(df$dstatus,
                               levels = c("newly diagnosed", "recurrent")),
-    `Prior SCCHN treatment` = factor(df$prior_hn_treatment, levels = c("N", "Y"),
-                                     labels = c("No prior treatment",
-                                                "Prior treatment")),
+    # PRHNTRTC ("Prior SCCHN treatment") is deliberately absent here: it
+    # differs from prior_radiotherapy for four patients, so its contrast grid
+    # duplicates the Prior-radiotherapy grid almost exactly.
     `Prior radiotherapy` = factor(df$prior_radiotherapy, levels = c("N", "Y"),
                                   labels = c("No prior radiotherapy",
                                              "Prior radiotherapy")),

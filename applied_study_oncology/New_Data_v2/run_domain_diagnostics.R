@@ -185,10 +185,13 @@ union_days <- function(start_day, end_day, horizon = Inf) {
 complete_with_followup <- complete %>%
   left_join(patients %>% select(SUBJID, arm, LASTCTDY), by = "SUBJID")
 horizons <- c(84, 90, 120)
+# Last-contact capping applies only to intervals with a complete boundary, so
+# the horizon diagnostics below inherit, in bounded form, the forced-zero
+# problem created by the unresolved-end-day records documented upstream.
 observed_window <- complete_with_followup %>%
   group_by(SUBJID, arm, LASTCTDY) %>%
   summarise(
-    uncapped_last_contact_days = union_days(AESTDYI, AEENDYI, LASTCTDY),
+    last_contact_capped_days = union_days(AESTDYI, AEENDYI, LASTCTDY),
     h84_observed_days = union_days(AESTDYI, AEENDYI, pmin(84, LASTCTDY)),
     h90_observed_days = union_days(AESTDYI, AEENDYI, pmin(90, LASTCTDY)),
     h120_observed_days = union_days(AESTDYI, AEENDYI, pmin(120, LASTCTDY)),
@@ -196,13 +199,13 @@ observed_window <- complete_with_followup %>%
   )
 observed_patient <- patients %>%
   left_join(observed_window, by = c("SUBJID", "arm", "LASTCTDY")) %>%
-  mutate(across(c(uncapped_last_contact_days,
+  mutate(across(c(last_contact_capped_days,
                   all_of(paste0("h", horizons, "_observed_days"))),
                 ~ coalesce(.x, 0)))
 
 truncation_rows <- lapply(c(Inf, horizons), function(h) {
   label <- if (is.infinite(h)) "Last-contact-capped" else paste0(h, " days")
-  variable <- if (is.infinite(h)) "uncapped_last_contact_days" else paste0("h", h, "_observed_days")
+  variable <- if (is.infinite(h)) "last_contact_capped_days" else paste0("h", h, "_observed_days")
   observed_patient %>%
     group_by(Arm = arm) %>%
     summarise(
@@ -218,7 +221,7 @@ write_csv(bind_rows(truncation_rows), file.path(out_dir, "last_contact_horizon_d
 
 write_csv(
   observed_patient %>% select(SUBJID, arm, LASTCTDY,
-                              uncapped_last_contact_days,
+                              last_contact_capped_days,
                               all_of(paste0("h", horizons, "_observed_days"))),
   file.path(out_dir, "last_contact_capped_patient_endpoint.csv")
 )
