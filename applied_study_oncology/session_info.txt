@@ -1,0 +1,21 @@
+R version:
+R version 4.3.3 (2024-02-29)
+
+Attached base packages:
+stats, graphics, grDevices, utils, datasets, methods, base
+
+Other packages used (versions installed at the time this file was recorded):
+  Rcpp 1.1.1 (CRAN)
+  RcppArmadillo 15.2.4-1 (CRAN)
+  Rcereal 1.3.2 (CRAN)
+  dplyr 1.2.1 (CRAN)
+  readr 2.2.0 (CRAN)
+  haven 2.5.5 (CRAN)
+  ggplot2 4.0.3 (CRAN)
+  coda 0.19-4.1 (CRAN)
+
+Platform:
+x86_64-pc-linux-gnu
+Running under:
+Locale:
+C.UTF-8
