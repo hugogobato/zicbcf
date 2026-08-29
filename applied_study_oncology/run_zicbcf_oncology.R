@@ -39,7 +39,7 @@ outdir <- "applied_study_oncology"
 source(file.path(outdir, "oncology_common.R"))
 
 N_CHAINS <- 4L
-N_BURN <- 2000L
+N_BURN <- 5000L
 N_SIM <- 4000L
 CHAIN_SEEDS <- seq_len(N_CHAINS)
 
@@ -217,7 +217,7 @@ hist(cate_mean, breaks = 50, col = "skyblue", border = "white",
 abline(v = ate_mean, col = "firebrick", lwd = 2, lty = 3)
 dev.off()
 
-dens_groups <- labels[c("ECOG status", "Prior SCCHN treatment", "Disease status")]
+dens_groups <- labels[c("ECOG status", "Disease status")]
 png(file.path(outdir, "14_ONC_cate_subgroup_densities.png"), width = 1000, height = 850)
 par(mfrow = c(2, 2), mar = c(4.5, 4, 3, 1))
 for (gname in names(dens_groups)) {
