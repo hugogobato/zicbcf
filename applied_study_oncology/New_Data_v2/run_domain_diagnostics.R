@@ -219,11 +219,19 @@ truncation_rows <- lapply(c(Inf, horizons), function(h) {
 })
 write_csv(bind_rows(truncation_rows), file.path(out_dir, "last_contact_horizon_diagnostic.csv"))
 
+## The per-patient endpoint file is a derivative with one row per subject and is
+## therefore never written inside the versioned repository: it goes to a secure
+## directory outside it (override with the ZICBCF_SECURE_DIR environment
+## variable). Only aggregate outputs are written to out_dir above.
+secure_dir <- Sys.getenv("ZICBCF_SECURE_DIR",
+                         unset = file.path(path.expand("~"), "secure_zicbcf_outputs",
+                                           "New_Data_v2"))
+dir.create(secure_dir, recursive = TRUE, showWarnings = FALSE)
 write_csv(
   observed_patient %>% select(SUBJID, arm, LASTCTDY,
                               last_contact_capped_days,
                               all_of(paste0("h", horizons, "_observed_days"))),
-  file.path(out_dir, "last_contact_capped_patient_endpoint.csv")
+  file.path(secure_dir, "last_contact_capped_patient_endpoint.csv")
 )
-
 cat("Wrote v2 domain diagnostics to", out_dir, "\n")
+cat("Wrote per-patient endpoint file outside the repository to", secure_dir, "\n")

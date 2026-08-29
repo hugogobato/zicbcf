@@ -95,7 +95,7 @@ zic_chains <- lapply(CHAIN_SEEDS, function(seed) {
   set.seed(seed)
   cat("  ZIC-BCF-Smear chain", seed, "\n")
   zicbcf_smear(y = y, z = z, x_control = X, x_moderate = X, pihat = pihat,
-               nburn = 2000, nsim = 4000)
+               nburn = 5000, nsim = 4000)
 })
 zic_convergence <- zicbcf_convergence(zic_chains, n_cate_units = 10L)
 zic_smearing <- zicbcf_smearing_diagnostics(zic_chains[[1L]], y = y, z = z, x = X)
@@ -166,7 +166,7 @@ saveRDS(
     outcome = "Distinct on-study days with at least one grade 3+ AE",
     zic = list(ate = zic_ate_draws, cate = zic_cate_draws, hurdle_ate = zic_hurdle_ate_draws, hurdle_cate = zic_hurdle_cate_draws),
     gamma = list(ate = gamma_ate_draws, cate = gamma_cate_draws, hurdle_ate = gamma_hurdle_ate_draws, hurdle_cate = gamma_hurdle_cate_draws),
-    zic_settings = list(nburn = 2000, nsim = 4000, seeds = CHAIN_SEEDS),
+    zic_settings = list(nburn = 5000, nsim = 4000, seeds = CHAIN_SEEDS),
     gamma_settings = list(nburn = 1000, nsim = 1000, nthin = 1, seeds = CHAIN_SEEDS)
   ),
   file.path(out_dir, "nonoverlap_model_posterior_draws.rds")

@@ -24,7 +24,7 @@ source("applied_study/meps_common.R")
 
 OUTDIR <- "applied_study"
 N_CHAINS <- 4L
-N_BURN <- 1000L
+N_BURN <- 5000L  # raised from 1,000 after the Geweke investigation; final models
 N_SIM <- 2000L
 CHAIN_SEEDS <- seq_len(N_CHAINS)
 
