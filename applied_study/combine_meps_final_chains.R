@@ -67,10 +67,14 @@ if (!is.null(sm1)) {
 # -- pooled domain draws ------------------------------------------------------
 cate_unweighted <- pool("scalar_unweighted")
 cate_weighted <- pool("scalar_weighted")
+# Per-domain pooled draws: concatenate the four chains' per-draw domain means
+# into one 8,000-vector per domain, then bind domains as columns.
 hurdle_unweighted <- do.call(cbind, lapply(seq_along(domain_names), function(j)
-  do.call(rbind, lapply(chains, function(c) c$hurdle_domain[[j]]$unweighted))))
+  unlist(lapply(chains, function(c) c$hurdle_domain[[j]]$unweighted))))
 hurdle_weighted <- do.call(cbind, lapply(seq_along(domain_names), function(j)
-  do.call(rbind, lapply(chains, function(c) c$hurdle_domain[[j]]$weighted))))
+  unlist(lapply(chains, function(c) c$hurdle_domain[[j]]$weighted))))
+stopifnot(dim(hurdle_unweighted) == c(total_draws, length(domain_names)),
+          dim(hurdle_weighted) == c(total_draws, length(domain_names)))
 colnames(hurdle_unweighted) <- domain_names
 colnames(hurdle_weighted) <- domain_names
 cate_unit_mean <- colSums(pool("cate_unit_sum")) / total_draws
