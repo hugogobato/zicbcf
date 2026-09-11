@@ -129,6 +129,11 @@ CONTINUOUS_TREATMENT_EXTENSION.md
 /applied_study_oncology/**/analysis/*.log
 /applied_study_oncology/**/analysis/*.png
 /applied_study_oncology/**/analysis/*.pdf
+## Geweke investigation outputs. The chain draws are per-draw scalars rather
+## than per-patient records, but they are still derived from the licensed
+## SPECTRUM data, so they are withheld with the rest of the SPECTRUM-derived
+## outputs pending Project Data Sphere's written confirmation. The scripts
+## that regenerate them are committed; the memo stays alongside them locally.
 /applied_study_oncology/geweke_investigation/*.rds
 /applied_study_oncology/geweke_investigation/*.md
 

@@ -104,7 +104,7 @@ zic_cate <- do.call(rbind, lapply(zic_chains, function(f) f$cate))
 gamma_chains <- lapply(CHAIN_SEEDS, function(seed) {
   set.seed(seed)
   cat("  Gamma hurdle chain", seed, "\n")
-  gamma_hurdle(y = y_rate, z = z, x = X, nburn = 1000, nsim = 1000, nthin = 1)
+  gamma_hurdle(y = y_rate, z = z, x = X, nburn = 5000, nsim = 4000, nthin = 1)
 })
 gamma_ate <- unlist(lapply(gamma_chains, function(f) f$ate), use.names = FALSE)
 gamma_cate <- do.call(rbind, lapply(gamma_chains, function(f) f$cate))

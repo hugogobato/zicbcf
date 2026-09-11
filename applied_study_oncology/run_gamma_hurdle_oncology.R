@@ -13,8 +13,8 @@ outdir <- "applied_study_oncology"
 source(file.path(outdir, "oncology_common.R"))
 
 N_CHAINS <- 4L
-N_BURN <- 1000L
-N_SIM <- 1000L
+N_BURN <- 5000L
+N_SIM <- 4000L
 CHAIN_SEEDS <- seq_len(N_CHAINS)
 
 data_file <- file.path(outdir, "zic_bcf_headneck_analysis_data.csv")
@@ -39,8 +39,11 @@ cat("Design matrix columns:", paste(colnames(X), collapse = ", "), "\n")
 cat(sprintf("Fitting Gamma Hurdle benchmark: %d chains of %d retained draws...\n",
             N_CHAINS, N_SIM))
 
-# Settings match the Gamma-hurdle run in applied_study/run_gamma_hurdle.R, now
-# replicated across chains so that convergence can be assessed rather than
+# The benchmark uses the same four chains of 4,000 retained draws as the final
+# ZIC-BCF-Smear fits, so the specification comparison in the manuscript does
+# not pair 16,000 pooled draws against 4,000. The benchmark is a Laplace
+# posterior, so burn-in is ignored and nsim is the number of posterior draws.
+# Replicating across chains also lets convergence be assessed rather than
 # assumed.
 chains <- lapply(CHAIN_SEEDS, function(seed) {
   set.seed(seed)

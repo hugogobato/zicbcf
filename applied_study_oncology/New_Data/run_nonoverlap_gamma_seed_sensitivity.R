@@ -21,7 +21,7 @@ z <- as.integer(df$treatment)
 X <- onc_design_matrix(df)
 
 set.seed(2026)
-fit <- gamma_hurdle(y = y, z = z, x = X, nburn = 1000, nsim = 1000, nthin = 1)
+fit <- gamma_hurdle(y = y, z = z, x = X, nburn = 5000, nsim = 4000, nthin = 1)
 hurdle_ate_draws <- rowMeans(fit$p1 - fit$p0)
 
 summarise_draws <- function(draws) {

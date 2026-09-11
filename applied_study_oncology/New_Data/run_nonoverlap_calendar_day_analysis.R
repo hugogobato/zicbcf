@@ -107,12 +107,15 @@ zic_hurdle_cate_draws <- do.call(rbind, lapply(zic_chains, function(f) {
 }))
 zic_hurdle_ate_draws <- rowMeans(zic_hurdle_cate_draws)
 
-# The parametric Gamma-hurdle benchmark matches the original benchmark's
-# covariates, burn-in, posterior draws, thinning, and chain configuration.
+# The parametric Gamma-hurdle benchmark matches the ZIC-BCF-Smear fit's
+# covariates, burn-in, posterior draws, thinning, and chain configuration, so
+# that the draw budgets compared in the text are equal rather than 4,000
+# against 16,000. The benchmark is a Laplace posterior, so burn-in is ignored
+# and nsim is the number of posterior draws.
 gamma_chains <- lapply(CHAIN_SEEDS, function(seed) {
   set.seed(seed)
   cat("  Gamma hurdle chain", seed, "\n")
-  gamma_hurdle(y = y, z = z, x = X, nburn = 1000, nsim = 1000, nthin = 1)
+  gamma_hurdle(y = y, z = z, x = X, nburn = 5000, nsim = 4000, nthin = 1)
 })
 gamma_convergence <- zicbcf_convergence_table(list(
   `ATE (response scale)` = lapply(gamma_chains, function(f) f$ate),
@@ -167,7 +170,7 @@ saveRDS(
     zic = list(ate = zic_ate_draws, cate = zic_cate_draws, hurdle_ate = zic_hurdle_ate_draws, hurdle_cate = zic_hurdle_cate_draws),
     gamma = list(ate = gamma_ate_draws, cate = gamma_cate_draws, hurdle_ate = gamma_hurdle_ate_draws, hurdle_cate = gamma_hurdle_cate_draws),
     zic_settings = list(nburn = 5000, nsim = 4000, seeds = CHAIN_SEEDS),
-    gamma_settings = list(nburn = 1000, nsim = 1000, nthin = 1, seeds = CHAIN_SEEDS)
+    gamma_settings = list(nburn = 5000, nsim = 4000, nthin = 1, seeds = CHAIN_SEEDS)
   ),
   file.path(out_dir, "nonoverlap_model_posterior_draws.rds")
 )
