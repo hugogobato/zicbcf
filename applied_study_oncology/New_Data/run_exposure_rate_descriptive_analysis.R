@@ -95,7 +95,7 @@ zic_chains <- lapply(CHAIN_SEEDS, function(seed) {
   set.seed(seed)
   cat("  ZIC-BCF-Smear chain", seed, "\n")
   zicbcf_smear(y = y_rate, z = z, x_control = X, x_moderate = X, pihat = pihat,
-               nburn = 2000, nsim = 4000)
+               nburn = 5000, nsim = 4000)
 })
 zic_convergence <- zicbcf_convergence(zic_chains, n_cate_units = 5L)
 zic_ate <- unlist(lapply(zic_chains, function(f) f$ate), use.names = FALSE)

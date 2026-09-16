@@ -89,7 +89,10 @@ CONTINUOUS_TREATMENT_EXTENSION.md
 !/applied_study_oncology/session_info.txt
 !/applied_study_oncology/renv.lock
 
+## Unit-level figures: one point per patient, or one point per unit. These are
+## per-patient derivatives in graphical form, withheld with the analysis/ plots.
 /applied_study_oncology/13_ONC_cate_unit_histogram.png
+/applied_study_oncology/15_ONC_cate_vs_age.png
 /applied_study_oncology/18_ONC_gamma_hurdle_cate_histogram.png
 /applied_study_oncology/19_ONC_gamma_hurdle_hurdle_cate_histogram.png
 
@@ -111,6 +114,7 @@ CONTINUOUS_TREATMENT_EXTENSION.md
 ## Box plots that render one point per patient are per-patient derivatives in
 ## graphical form, so they are withheld with the rest of that material; the
 ## aggregate attenuation curve is not.
+/applied_study_oncology/positive_severe_ae_duration_boxplot.png
 /applied_study_oncology/New_Data/analysis/treatment_exposure_distribution.png
 /applied_study_oncology/New_Data/analysis/exposure_rate_distribution.png
 /applied_study_oncology/New_Data/analysis/endpoint_distribution_by_treatment.png
