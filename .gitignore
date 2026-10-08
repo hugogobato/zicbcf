@@ -28,6 +28,10 @@ src/*:Zone.Identifier
 /EDPcausal-main
 /Draft
 
+## Local preprint workspace: merged main + supplement built with the standard
+## article class, for arXiv-style distribution. Not part of the package.
+/Preprint
+
 /theory
 CONTINUOUS_TREATMENT_EXTENSION.md
 ## MEPS applied study.
@@ -143,3 +147,4 @@ CONTINUOUS_TREATMENT_EXTENSION.md
 
 /applied_study_oncology/Legal_Stuff/
 supplement.tex
+proof_checks/
